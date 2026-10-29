@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: 'Outfit', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* Kanigiri Restaurant Theme (Customer Portal) */
+  --color-warm-cream: #FAF6EE;
+  --color-warm-cream-light: #FDFBF7;
+  --color-warm-cream-border: #EAE3D6;
+  --color-warm-cream-dark: #F2ECE0;
+
+  --color-olive-primary: #3D5A2B;
+  --color-olive-dark: #2E4620;
+  --color-olive-light: #EEF3E8;
+  --color-olive-border: #D4E0C9;
+  --color-olive-accent: #507538;
+
+  --color-saffron-gold: #D48B18;
+  --color-saffron-bright: #E5A93C;
+  --color-saffron-light: #FDF5E6;
+  --color-saffron-border: #F8E3BA;
+
+  --color-dark-brown: #261C14;
+  --color-dark-brown-soft: #3A2B20;
+  --color-dark-brown-muted: #73675C;
+
+  /* Kitchen Staff Theme (Navy & Cyan Portal) */
+  --color-staff-navy: #0B192C;
+  --color-staff-navy-rich: #1E3E62;
+  --color-staff-navy-deep: #07101E;
+  --color-staff-navy-border: #1E293B;
+
+  --color-staff-cyan: #06B6D4;
+  --color-staff-cyan-dark: #0891B2;
+  --color-staff-cyan-light: #ECFEFF;
+  --color-staff-cyan-subtle: #CFFAFE;
+
+  --color-staff-blue: #2563EB;
+  --color-staff-blue-accent: #38BDF8;
+  --color-staff-bg-cool: #F0F7FF;
+  --color-staff-bg-surface: #F8FAFC;
+}
+
+:root {
+  color-scheme: light;
+  background-color: #FAF6EE;
+  color: #261C14;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #FAF6EE;
+  color: #261C14;
+  overflow-x: hidden;
+}
+
+/* Custom refined scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF6EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8D0C0;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BDB29F;
+}
+
+/* 3D perspective wrapper for card lift and tilt */
+.perspective-container {
+  perspective: 1200px;
+}
+
+.tilt-card {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card:hover {
+  transform: translateY(-6px) rotateX(2deg) rotateY(-1.5deg);
+}
+
+/* Subtle floating animation */
+@keyframes softFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-soft-float {
+  animation: softFloat 5s ease-in-out infinite;
+}
+
+/* Cyan pulse glow for Kitchen terminal */
+@keyframes cyanPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(6, 182, 212, 0.4), 0 0 30px rgba(6, 182, 212, 0.25);
+  }
+}
+
+.animate-cyan-glow {
+  animation: cyanPulseGlow 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for luxury tags */
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.gold-shimmer-badge {
+  background: linear-gradient(90deg, #D48B18 0%, #F5CE7A 50%, #D48B18 100%);
+  background-size: 200% 100%;
+  animation: goldShimmer 4s infinite linear;
+}
+
+/* Accessibility: Reduced-Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .tilt-card:hover {
+    transform: none !important;
+  }
+}

@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: officebite-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/officebite?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+server:
+  port: 8081
+
+app:
+  jwt:
+    # 256-bit or longer HMAC-SHA256 signing secret loaded from environment
+    secret: ${JWT_SECRET}
+    # Token expiration in milliseconds (default: 86400000 ms = 24 hours)
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+  # Documented bootstrap configuration for provisioning initial staff/admin accounts securely
+  # Set BOOTSTRAP_STAFF_EMAIL and BOOTSTRAP_STAFF_PASSWORD in your environment to automatically provision
+  bootstrap:
+    staff:
+      email: ${BOOTSTRAP_STAFF_EMAIL:}
+      password: ${BOOTSTRAP_STAFF_PASSWORD:}
+      name: ${BOOTSTRAP_STAFF_NAME:Kitchen Staff}
+      employee-id: ${BOOTSTRAP_STAFF_EMPLOYEE_ID:STAFF-01}
+    admin:
+      email: ${BOOTSTRAP_ADMIN_EMAIL:}
+      password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+      name: ${BOOTSTRAP_ADMIN_NAME:System Administrator}
+      employee-id: ${BOOTSTRAP_ADMIN_EMPLOYEE_ID:ADMIN-01}
+
+
