@@ -87,7 +87,7 @@ export const MyOrdersPage = () => {
         image:
           canonical?.image ||
           item.image ||
-          'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
+          '/assets/images/showcase_thali_royal.png',
         quantity: item.quantity || 1,
       });
     });

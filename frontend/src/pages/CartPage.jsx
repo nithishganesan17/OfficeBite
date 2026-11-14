@@ -28,8 +28,7 @@ export const CartPage = () => {
 
   const [imgErrors, setImgErrors] = useState({});
 
-  const fallbackImg =
-    'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80';
+  const fallbackImg = '/assets/images/showcase_thali_royal.png';
 
   const handleImgError = (id) => {
     setImgErrors((prev) => ({ ...prev, [id]: true }));

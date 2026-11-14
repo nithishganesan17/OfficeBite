@@ -16,8 +16,7 @@ export const FoodCard = ({ dish }) => {
   const quantity = cartItem ? cartItem.quantity : 0;
 
   // Fallback high-res food image if remote CDN fails
-  const fallbackImg =
-    'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80';
+  const fallbackImg = '/assets/images/showcase_thali_royal.png';
 
   return (
     <div className="perspective-container">

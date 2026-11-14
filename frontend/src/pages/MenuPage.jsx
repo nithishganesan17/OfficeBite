@@ -16,7 +16,7 @@ import {
   Sparkles,
   Salad,
 } from 'lucide-react';
-import { CATEGORIES, MENU_ITEMS } from '../data/mockData';
+import { CATEGORIES, MENU_ITEMS, getCanonicalDish, resolveDishImage } from '../data/mockData';
 import { CategoryCarousel } from '../components/common/CategoryCarousel';
 import { getMenuCatalog } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -29,7 +29,7 @@ const CATEGORY_META = {
   all: {
     name: 'All Dishes',
     icon: LayoutGrid,
-    image: null,
+    image: '/assets/images/showcase_thali_royal.png',
   },
   breakfast: {
     name: 'Breakfast',
@@ -59,17 +59,49 @@ const CATEGORY_META = {
     name: 'North Indian',
     image: '/assets/images/showcase_thali_deluxe.png',
   },
+  'indian-meals': {
+    name: 'Indian Meals',
+    image: '/assets/images/showcase_thali_deluxe.png',
+  },
+  dosa: {
+    name: 'Dosa & Crepes',
+    image: '/assets/images/showcase_masala_dosa.png',
+  },
+  idli: {
+    name: 'Idli Specials',
+    image: '/assets/images/showcase_steamed_idli.png',
+  },
+  biryani: {
+    name: 'Dum Biryani',
+    image: '/assets/images/biryani_bowl_nobg.png',
+  },
+  'rice-bowls': {
+    name: 'Rice Bowls',
+    image: '/assets/images/jeera_rice_bowl.png',
+  },
+  sandwiches: {
+    name: 'Sandwiches',
+    image: '/assets/images/club_sandwich.png',
+  },
+  coffee: {
+    name: 'Filter Coffee & Tea',
+    image: '/assets/images/filter_coffee.png',
+  },
+  juice: {
+    name: 'Fresh Juices',
+    image: '/assets/images/fresh_juice_varieties.png',
+  },
   chinese: {
     name: 'Chinese',
-    image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=160&q=80',
+    image: '/assets/images/veg_paneer_biryani_bowl.png',
   },
   healthy: {
     name: 'Healthy',
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=160&q=80',
+    image: '/assets/images/executive_south_indian_thali.png',
   },
   desserts: {
     name: 'Desserts',
-    image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=160&q=80',
+    image: '/assets/images/royal_kesar_pista_rasmalai.png',
   },
 };
 
@@ -231,32 +263,81 @@ export const MenuPage = () => {
     try {
       const data = await getMenuCatalog();
       if (Array.isArray(data) && data.length > 0) {
-        const normalized = data.map((item) => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          image: item.imageUrl || item.image,
-          imageUrl: item.imageUrl || item.image,
-          isVeg: item.vegetarian !== undefined ? item.vegetarian : item.isVeg ?? true,
-          category: item.category,
-          categoryAlias: item.categoryAlias || [],
-          categoryName: item.categoryName || item.category,
-          rating: item.rating || 4.7,
-          reviewsCount: item.reviewsCount || 120,
-          prepTime: item.prepTime || '10-15 mins',
-          calories: item.calories || '450 kcal',
-          badge: item.badge || (item.isPopular ? 'Popular' : ''),
-          isPopular: item.isPopular ?? true,
-          ingredients: item.ingredients || ['Fresh Ingredients', 'Traditional Spices'],
-        }));
-        setMenuItems(normalized);
+        const apiIds = new Set();
+        const normalized = data.map((item) => {
+          const canonical = getCanonicalDish(item);
+          const resolvedImg = resolveDishImage(canonical || item);
+          const dishId = canonical ? canonical.id : item.id;
+          apiIds.add(dishId);
+
+          return {
+            id: dishId,
+            name: canonical ? canonical.name : item.name,
+            description: item.description || (canonical && canonical.description),
+            price: item.price,
+            image: resolvedImg,
+            imageUrl: resolvedImg,
+            isVeg:
+              item.vegetarian !== undefined
+                ? item.vegetarian
+                : canonical
+                ? canonical.isVeg
+                : item.isVeg ?? true,
+            category: canonical ? canonical.category : item.category,
+            categoryAlias: canonical ? canonical.categoryAlias : item.categoryAlias || [],
+            categoryName:
+              (canonical && canonical.categoryName) || item.categoryName || item.category,
+            rating: item.rating || (canonical && canonical.rating) || 4.7,
+            reviewsCount: item.reviewsCount || (canonical && canonical.reviewsCount) || 120,
+            prepTime: item.prepTime || (canonical && canonical.prepTime) || '10-15 mins',
+            calories: item.calories || (canonical && canonical.calories) || '450 kcal',
+            badge: item.badge || (canonical && canonical.badge) || (item.isPopular ? 'Popular' : ''),
+            isPopular: item.isPopular ?? (canonical ? canonical.isPopular : true),
+            ingredients:
+              item.ingredients || (canonical && canonical.ingredients) || [
+                'Fresh Ingredients',
+                'Traditional Spices',
+              ],
+          };
+        });
+
+        // Ensure dishes in mock catalog (e.g. non-veg dishes 24 and 25) are merged if missing from backend DB
+        const missingFromBackend = MENU_ITEMS.filter((mockDish) => !apiIds.has(mockDish.id)).map(
+          (d) => {
+            const resolvedImg = resolveDishImage(d);
+            return {
+              ...d,
+              image: resolvedImg,
+              imageUrl: resolvedImg,
+            };
+          }
+        );
+
+        setMenuItems([...normalized, ...missingFromBackend]);
       } else {
-        setMenuItems(MENU_ITEMS);
+        setMenuItems(
+          MENU_ITEMS.map((d) => {
+            const resolvedImg = resolveDishImage(d);
+            return {
+              ...d,
+              image: resolvedImg,
+              imageUrl: resolvedImg,
+            };
+          })
+        );
       }
     } catch {
       // Offline fallback ensures reliable catalog
-      setMenuItems(MENU_ITEMS);
+      setMenuItems(
+        MENU_ITEMS.map((d) => {
+          const resolvedImg = resolveDishImage(d);
+          return {
+            ...d,
+            image: resolvedImg,
+            imageUrl: resolvedImg,
+          };
+        })
+      );
     } finally {
       setLoading(false);
     }
@@ -665,6 +746,9 @@ export const MenuPage = () => {
                       alt={prevDish.name}
                       draggable={false}
                       className="w-full h-full object-contain pointer-events-none select-none group-hover:scale-105 group-hover:opacity-100 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.src = '/assets/images/showcase_thali_royal.png';
+                      }}
                     />
                   </div>
                 )}
@@ -757,6 +841,9 @@ export const MenuPage = () => {
                               alt={outgoingDish.name}
                               draggable={false}
                               className="w-full h-full object-contain pointer-events-none select-none anim-showcase-dish drop-shadow-[0_28px_55px_rgba(0,0,0,0.95)]"
+                              onError={(e) => {
+                                e.currentTarget.src = '/assets/images/showcase_thali_royal.png';
+                              }}
                             />
                           </div>
                         )}
@@ -785,6 +872,9 @@ export const MenuPage = () => {
                             draggable={false}
                             className="w-full h-full object-contain pointer-events-none select-none anim-showcase-dish drop-shadow-[0_28px_55px_rgba(0,0,0,0.95)] transform group-hover:scale-103 transition-transform duration-500 ease-out"
                             loading="eager"
+                            onError={(e) => {
+                              e.currentTarget.src = '/assets/images/showcase_thali_royal.png';
+                            }}
                           />
                         </div>
                       </div>
@@ -869,6 +959,9 @@ export const MenuPage = () => {
                       alt={nextDish.name}
                       draggable={false}
                       className="w-full h-full object-contain pointer-events-none select-none group-hover:scale-105 group-hover:opacity-100 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.src = '/assets/images/showcase_thali_royal.png';
+                      }}
                     />
                   </div>
                 )}
@@ -973,6 +1066,9 @@ export const MenuPage = () => {
                         className="relative z-10 w-full h-full object-contain pointer-events-none select-none anim-showcase-dish drop-shadow-[0_16px_30px_rgba(0,0,0,0.9)] transform group-hover:scale-108 transition-transform duration-500 ease-out"
                         style={{
                           animationDelay: `${(idx % 4) * 0.35}s`,
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.src = '/assets/images/showcase_thali_royal.png';
                         }}
                       />
 

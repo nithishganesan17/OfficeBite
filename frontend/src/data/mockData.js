@@ -59,6 +59,12 @@ export const CATEGORIES = [
     icon: 'Citrus',
     image: '/assets/images/fresh_juice_varieties.png',
   },
+  {
+    id: 'desserts',
+    name: 'Desserts',
+    icon: 'Sparkles',
+    image: '/assets/images/royal_kesar_pista_rasmalai.png',
+  },
 ];
 
 export const MENU_ITEMS = [
@@ -464,6 +470,7 @@ export const MENU_ITEMS = [
     name: 'Warm Shahi Gulab Jamun (2 pcs)',
     category: 'desserts',
     categoryName: 'Desserts',
+    categoryAlias: ['desserts', 'DESSERTS', 'sweets'],
     description: 'Golden brown fried khoya dumplings soaked in fragrant green cardamom and saffron rose syrup, garnished with slivered pistachios.',
     price: 65,
     rating: 4.9,
@@ -482,6 +489,7 @@ export const MENU_ITEMS = [
     name: 'Royal Kesar Pista Rasmalai (2 pcs)',
     category: 'desserts',
     categoryName: 'Desserts',
+    categoryAlias: ['desserts', 'DESSERTS', 'sweets'],
     description: 'Delicate, spongy cottage cheese patties steeped in thickened saffron-infused whole milk with crushed pistachios, almonds & fragrant rose petals.',
     price: 85,
     rating: 4.9,
@@ -596,8 +604,168 @@ export const INITIAL_ORDERS = [
 ];
 
 /**
+ * Authoritative Canonical Dish Image Map.
+ * Maps dish IDs and showcase aliases to transparent, high-res local image assets.
+ * Guarantees that newly uploaded local images always take precedence over backend/database Unsplash URLs.
+ */
+export const DISH_IMAGE_MAP = {
+  'dish-1': '/assets/images/deluxe_north_indian_thali.png',
+  'dish-2': '/assets/images/executive_south_indian_thali.png',
+  'dish-3': '/assets/images/showcase_paneer_tikka.png',
+  'dish-4': '/assets/images/mysore_masala_dosa.png',
+  'dish-5': '/assets/images/ghee_roast_paper_dosa.png',
+  'dish-6': '/assets/images/paneer_bhurji_dosa.png',
+  'dish-7': '/assets/images/ghee_podi_button_idlis.png',
+  'dish-8': '/assets/images/showcase_steamed_idli.png',
+  'dish-9': '/assets/images/chicken_dum_biryani_bowl.png',
+  'dish-10': '/assets/images/veg_paneer_biryani_bowl.png',
+  'dish-11': '/assets/images/fragrant_ghee_jeera_rice_bowl.png',
+  'dish-12': '/assets/images/rajma_chawal_bowl.png',
+  'dish-13': '/assets/images/amritsari_chole_rice_bowl.png',
+  'dish-14': '/assets/images/club_sandwich.png',
+  'dish-15': '/assets/images/paneer_tikka_focaccia_melt.png',
+  'dish-16': '/assets/images/samosa_platter.png',
+  'dish-17': '/assets/images/medu_vada_platter.png',
+  'dish-18': '/assets/images/madras_filter_coffee.png',
+  'dish-19': '/assets/images/cold_brew_hazelnut_latte.png',
+  'dish-20': '/assets/images/cold_pressed_valencia_orange_juice.png',
+  'dish-21': '/assets/images/watermelon_mint_hydration_cooler.png',
+  'dish-22': '/assets/images/warm_shahi_gulab_jamun.png',
+  'dish-23': '/assets/images/royal_kesar_pista_rasmalai.png',
+  'dish-24': '/assets/images/chicken_dum_biryani_bowl.png',
+  'dish-25': '/assets/images/paneer_tikka_focaccia_melt.png',
+
+  // Showcase aliases
+  'showcase-paneer-tikka': '/assets/images/showcase_paneer_tikka.png',
+  'showcase-masala-dosa': '/assets/images/showcase_masala_dosa.png',
+  'showcase-idli': '/assets/images/showcase_steamed_idli.png',
+  'showcase-biryani': '/assets/images/chicken_dum_biryani_bowl.png',
+  'showcase-thali': '/assets/images/deluxe_north_indian_thali.png',
+};
+
+/**
+ * Normalizes dish names for fuzzy and robust image resolution
+ */
+const normalizeDishKey = (str) => {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .toLowerCase()
+    .replace(/\(.*?\)/g, '') // remove parenthetical notes like (2 pcs), (14 pcs)
+    .replace(/[^a-z0-9]/g, ' ') // replace symbols with spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+export const DISH_NAME_IMAGE_MAP = {
+  'deluxe north indian thali': '/assets/images/deluxe_north_indian_thali.png',
+  'north indian thali': '/assets/images/deluxe_north_indian_thali.png',
+  'executive south indian thali': '/assets/images/executive_south_indian_thali.png',
+  'south indian thali': '/assets/images/executive_south_indian_thali.png',
+  'paneer tikka rice platter': '/assets/images/showcase_paneer_tikka.png',
+  'tandoori paneer tikka platter': '/assets/images/showcase_paneer_tikka.png',
+  'paneer tikka': '/assets/images/showcase_paneer_tikka.png',
+  'mysore masala dosa': '/assets/images/mysore_masala_dosa.png',
+  'golden crispy masala dosa': '/assets/images/showcase_masala_dosa.png',
+  'masala dosa': '/assets/images/mysore_masala_dosa.png',
+  'ghee roast paper dosa': '/assets/images/ghee_roast_paper_dosa.png',
+  'paper roast dosa': '/assets/images/ghee_roast_paper_dosa.png',
+  'paneer bhurji stuffed dosa': '/assets/images/paneer_bhurji_dosa.png',
+  'paneer dosa': '/assets/images/paneer_bhurji_dosa.png',
+  'ghee podi button idlis': '/assets/images/ghee_podi_button_idlis.png',
+  'button idlis': '/assets/images/ghee_podi_button_idlis.png',
+  'classic steamed idli vada combo': '/assets/images/showcase_steamed_idli.png',
+  'royal idli medu vada platter': '/assets/images/showcase_steamed_idli.png',
+  'steamed idli': '/assets/images/showcase_steamed_idli.png',
+  'royal chicken dum biryani': '/assets/images/chicken_dum_biryani_bowl.png',
+  'royal veg dum biryani': '/assets/images/biryani_bowl_nobg.png',
+  'chicken dum biryani': '/assets/images/chicken_dum_biryani_bowl.png',
+  'dum biryani': '/assets/images/chicken_dum_biryani_bowl.png',
+  'paneer makhani biryani bowl': '/assets/images/veg_paneer_biryani_bowl.png',
+  'fragrant ghee jeera rice bowl': '/assets/images/fragrant_ghee_jeera_rice_bowl.png',
+  'dal makhani jeera rice bowl': '/assets/images/fragrant_ghee_jeera_rice_bowl.png',
+  'jeera rice bowl': '/assets/images/fragrant_ghee_jeera_rice_bowl.png',
+  'punjabi rajma chawal bowl': '/assets/images/rajma_chawal_bowl.png',
+  'rajma chawal': '/assets/images/rajma_chawal_bowl.png',
+  'amritsari chole rice bowl': '/assets/images/amritsari_chole_rice_bowl.png',
+  'chole rice bowl': '/assets/images/amritsari_chole_rice_bowl.png',
+  'bombay grilled veg club sandwich': '/assets/images/club_sandwich.png',
+  'club sandwich': '/assets/images/club_sandwich.png',
+  'paneer tikka focaccia melt': '/assets/images/paneer_tikka_focaccia_melt.png',
+  'punjabi samosa platter': '/assets/images/samosa_platter.png',
+  'samosa platter': '/assets/images/samosa_platter.png',
+  'crispy medu vada': '/assets/images/medu_vada_platter.png',
+  'madras filter coffee': '/assets/images/madras_filter_coffee.png',
+  'filter coffee': '/assets/images/madras_filter_coffee.png',
+  'cold brew hazelnut latte': '/assets/images/cold_brew_hazelnut_latte.png',
+  'cold pressed valencia orange juice': '/assets/images/cold_pressed_valencia_orange_juice.png',
+  'orange juice': '/assets/images/cold_pressed_valencia_orange_juice.png',
+  'watermelon mint hydration cooler': '/assets/images/watermelon_mint_hydration_cooler.png',
+  'watermelon cooler': '/assets/images/watermelon_mint_hydration_cooler.png',
+  'warm shahi gulab jamun': '/assets/images/warm_shahi_gulab_jamun.png',
+  'royal kesar pista rasmalai': '/assets/images/royal_kesar_pista_rasmalai.png',
+  'chettinad pepper chicken bowl': '/assets/images/chicken_dum_biryani_bowl.png',
+  'grilled chicken tikka focaccia melt': '/assets/images/paneer_tikka_focaccia_melt.png',
+};
+
+/**
+ * Returns the verified transparent high-res local image for any dish, ID, or dish object.
+ * If the input contains an old Unsplash URL, it is intercepted and overridden.
+ */
+export const resolveDishImage = (input) => {
+  if (!input) return '/assets/images/showcase_thali_royal.png';
+
+  // 1. If input is an object
+  if (typeof input === 'object') {
+    const directId = input.id || input.menuItemId;
+    if (directId && DISH_IMAGE_MAP[directId]) {
+      return DISH_IMAGE_MAP[directId];
+    }
+    const rawName = input.name || input.itemName || '';
+    if (rawName) {
+      const norm = normalizeDishKey(rawName);
+      if (DISH_NAME_IMAGE_MAP[norm]) {
+        return DISH_NAME_IMAGE_MAP[norm];
+      }
+      for (const [key, img] of Object.entries(DISH_NAME_IMAGE_MAP)) {
+        if (norm.includes(key) || key.includes(norm)) {
+          return img;
+        }
+      }
+    }
+    const current = input.image || input.imageUrl;
+    if (current && typeof current === 'string' && !current.includes('unsplash.com')) {
+      return current;
+    }
+    return '/assets/images/showcase_thali_royal.png';
+  }
+
+  // 2. If input is a string (ID or Name or Path)
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if (DISH_IMAGE_MAP[trimmed]) {
+      return DISH_IMAGE_MAP[trimmed];
+    }
+    const norm = normalizeDishKey(trimmed);
+    if (DISH_NAME_IMAGE_MAP[norm]) {
+      return DISH_NAME_IMAGE_MAP[norm];
+    }
+    for (const [key, img] of Object.entries(DISH_NAME_IMAGE_MAP)) {
+      if (norm.includes(key) || key.includes(norm)) {
+        return img;
+      }
+    }
+    if (trimmed.startsWith('/assets/images/')) {
+      return trimmed;
+    }
+  }
+
+  return '/assets/images/showcase_thali_royal.png';
+};
+
+/**
  * Resolves any dish item (or name/synthetic ID) to its authoritative canonical dish from the catalog.
- * Guarantees that canonical MySQL dish IDs ('dish-1', 'dish-20', etc.) are used everywhere.
+ * Guarantees that canonical MySQL dish IDs ('dish-1', 'dish-20', etc.) are used everywhere,
+ * and ensures the verified transparent local image is attached.
  */
 export const getCanonicalDish = (item) => {
   if (!item) return null;
@@ -606,7 +774,10 @@ export const getCanonicalDish = (item) => {
   const directId = item.menuItemId || item.id;
   if (directId && typeof directId === 'string' && directId.startsWith('dish-') && !directId.includes('reorder')) {
     const found = MENU_ITEMS.find((d) => d.id === directId);
-    if (found) return found;
+    if (found) {
+      const resolvedImg = resolveDishImage(found);
+      return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+    }
   }
 
   // 2. Extract clean name to match
@@ -616,20 +787,45 @@ export const getCanonicalDish = (item) => {
 
   // Try exact match first
   let found = MENU_ITEMS.find((d) => d.name.toLowerCase() === lowerName);
-  if (found) return found;
+  if (found) {
+    const resolvedImg = resolveDishImage(found);
+    return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+  }
+
+  // Try backend specific names
+  if (lowerName.includes('royal veg dum biryani')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-9');
+    if (found) {
+      const resolvedImg = resolveDishImage(found);
+      return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+    }
+  }
+  if (lowerName.includes('dal makhani') && lowerName.includes('jeera rice')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-11');
+    if (found) {
+      const resolvedImg = resolveDishImage(found);
+      return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+    }
+  }
 
   // Try substring / fuzzy contains match (e.g. "Warm Shahi Gulab Jamun" vs "Warm Shahi Gulab Jamun (2 pcs)")
   found = MENU_ITEMS.find((d) => {
     const dLower = d.name.toLowerCase();
     return dLower.includes(lowerName) || lowerName.includes(dLower);
   });
-  if (found) return found;
+  if (found) {
+    const resolvedImg = resolveDishImage(found);
+    return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+  }
 
   // Try matching synthetic slug (e.g. dish-reorder-cold-pressed-valencia-orange-juice -> cold pressed valencia orange juice)
   if (typeof directId === 'string' && directId.includes('dish-reorder-')) {
     const slugName = directId.replace('dish-reorder-', '').replace(/-/g, ' ').toLowerCase();
     found = MENU_ITEMS.find((d) => d.name.toLowerCase().includes(slugName) || slugName.includes(d.name.toLowerCase()));
-    if (found) return found;
+    if (found) {
+      const resolvedImg = resolveDishImage(found);
+      return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+    }
   }
 
   return null;
