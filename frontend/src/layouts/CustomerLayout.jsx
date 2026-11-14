@@ -5,6 +5,7 @@ import { Footer } from '../components/common/Footer';
 import { CartDrawer } from '../components/common/CartDrawer';
 import { Toast } from '../components/common/Toast';
 import { AuthModal } from '../components/common/AuthModal';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 /**
  * Dedicated Customer Portal Layout.
@@ -23,12 +24,14 @@ export const CustomerLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] flex flex-col text-[#261C14] selection:bg-[#3D5A2B]/20 selection:text-[#3D5A2B]">
+    <div className="min-h-screen bg-[#121212] flex flex-col text-[#F3F4F6] selection:bg-[#F59E0B]/30 selection:text-[#F59E0B]">
       {/* Customer-only Navigation Bar */}
       <Navbar onSearchClick={handleSearchClick} />
 
       <main className="flex-1">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       <Footer />

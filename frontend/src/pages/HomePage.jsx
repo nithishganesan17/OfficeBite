@@ -1,152 +1,240 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
-  Search,
-  Sparkles,
   ArrowRight,
   Clock,
-  ShieldCheck,
-  Flame,
-  Coffee,
-  CheckCircle2,
-  SlidersHorizontal,
-  X,
   Utensils,
-  MapPin,
-  TrendingUp,
   Star,
   ChevronLeft,
   ChevronRight,
   Plus,
-  Heart,
-  Award,
-  Layers,
+  Sparkles,
+  Flame,
 } from 'lucide-react';
-import { CATEGORIES, MENU_ITEMS } from '../data/mockData';
-import { FoodCard } from '../components/common/FoodCard';
+import { CATEGORIES, MENU_ITEMS, HOMEPAGE_SIGNATURE_DISHES } from '../data/mockData';
+import { BiryaniBowl3D } from '../components/common/BiryaniBowl3D';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { getMenuCatalog, API_BASE_URL } from '../services/api';
+import { getMenuCatalog } from '../services/api';
 
 /**
- * Premium Kanigiri-Inspired Customer HomePage.
- * Colors: warm cream (#FAF6EE), white (#FFFFFF), olive green (#3D5A2B), saffron gold (#D48B18), and dark brown (#261C14).
- * Features:
- * - Premium food hero with large food imagery, animated text, price badge, rating, and functional Order Now / Explore buttons.
- * - Interactive featured-food carousel with direct add-to-cart.
- * - Category filters, instant search, and animated section transitions.
- * - Reduced-motion support and accessible structure.
+ * Premium OfficeBite Customer HomePage — Dark Steakhouse-Inspired Theme.
+ * Palette:
+ * - Matte dark charcoal background: #121212 / #181818
+ * - On scroll: changes smoothly to light black with blur (bg-[#181818]/85 backdrop-blur-md)
+ * - Brand typography:
+ *   - "OfficeBite": Bold, stylish handwriting (Dancing Script cursive) in warm gold
+ *   - Headlines: Bold luxury serif (Playfair Display)
+ *   - Menu & order dish names: Bold stylish handwriting (Caveat cursive)
+ * - Hero biryani: Open presentation (no frame/border), stationary and stable (no rotation)
  */
+/**
+ * AnimateOnScrollDown
+ * Re-triggers entrance animations WHENEVER the user scrolls down into an element.
+ * Never animates when scrolling up (keeps elements visible).
+ * Silently resets elements when they scroll completely below the viewport,
+ * so whenever the user scrolls down again, the animation re-triggers seamlessly.
+ */
+const AnimateOnScrollDown = ({
+  children,
+  className = '',
+  initial = { opacity: 0, y: 50 },
+  animate = { opacity: 1, y: 0 },
+  transition = { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+  variants,
+  threshold = 0.90,
+  ...props
+}) => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const check = () => {
+      const rect = el.getBoundingClientRect();
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+
+      // When the top of the element enters the visible screen area
+      if (rect.top <= windowHeight * threshold && rect.bottom >= 0) {
+        setIsVisible(true);
+      } else if (rect.top > windowHeight) {
+        // Element is completely BELOW the screen (user scrolled up past it)
+        // Reset to initial state offscreen so it re-animates next time user scrolls down
+        setIsVisible(false);
+      }
+      // Note: When rect.bottom < 0 (element is ABOVE the screen, scrolled past downwards):
+      // Keep isVisible true so that when user scrolls UP, it remains visible without re-animating!
+    };
+
+    check();
+    window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+    };
+  }, [threshold]);
+
+  if (variants) {
+    return (
+      <motion.div
+        ref={ref}
+        className={className}
+        initial="hidden"
+        animate={isVisible ? 'visible' : 'hidden'}
+        variants={variants}
+        transition={transition}
+        {...props}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={initial}
+      animate={isVisible ? animate : initial}
+      transition={transition}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 export const HomePage = () => {
-  const { orders, addToCart, activeOrdersCount: contextActiveOrdersCount } = useCart();
+  const { orders, addToCart, showToast, activeOrdersCount: contextActiveOrdersCount } = useCart();
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, _setError] = useState(null);
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('ALL'); // 'ALL' | 'POPULAR' | 'BUDGET'
-  const [sortBy, setSortBy] = useState('POPULAR'); // 'POPULAR' | 'PRICE_ASC' | 'PRICE_DESC'
-
-  // Featured Carousel State
+  // Borderless Showcase Carousel State (Smooth Horizontal Slide Only)
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('next');
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
 
-  // Fetch menu catalog from Spring Boot REST API
-  const fetchMenu = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getMenuCatalog();
-      const normalized = data.map((item) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        image: item.imageUrl || item.image,
-        imageUrl: item.imageUrl || item.image,
-        isVeg: item.vegetarian !== undefined ? item.vegetarian : item.isVeg ?? true,
-        vegetarian: item.vegetarian !== undefined ? item.vegetarian : true,
-        isAvailable: item.available !== undefined ? item.available : item.isAvailable ?? true,
-        available: item.available !== undefined ? item.available : true,
-        category: item.category,
-        categoryName: item.categoryName || item.category,
-        rating: item.rating || 4.8,
-        reviewsCount: item.reviewsCount || 140,
-        prepTime: item.prepTime || '10-15 mins',
-        calories: item.calories || '450 kcal',
-        badge: item.badge || '',
-        isPopular: item.isPopular !== undefined ? item.isPopular : (item.popular ?? false),
-      }));
+  // Transition state for horizontal slide between outgoing and incoming dishes
+  const [transitioningFrom, setTransitioningFrom] = useState(null);
 
-      setMenuItems(normalized);
-    } catch (err) {
-      console.error('Failed to fetch from Spring Boot backend, loading fallback:', err);
-      // Seamlessly fall back to rich curated mock data if backend not reachable
-      setMenuItems(MENU_ITEMS);
-    } finally {
-      setLoading(false);
-    }
+  // Trigger smooth horizontal slide transition between dishes
+  const triggerTransition = (targetIndex, dir) => {
+    if (transitioningFrom !== null || targetIndex === currentSlide) return;
+    const oldIndex = currentSlide;
+    setTransitioningFrom(oldIndex);
+    setSlideDirection(dir);
+    setCurrentSlide(targetIndex);
+
+    setTimeout(() => {
+      setTransitioningFrom(null);
+    }, 500);
   };
 
+  const handleShowcaseNext = () => {
+    const listLen = showcaseList.length || 5;
+    const nextIdx = (currentSlide + 1) % listLen;
+    triggerTransition(nextIdx, 'next');
+  };
+
+  const handleShowcasePrev = () => {
+    const listLen = showcaseList.length || 5;
+    const prevIdx = (currentSlide - 1 + listLen) % listLen;
+    triggerTransition(prevIdx, 'prev');
+  };
+
+  // Autoplay timer: Automatically changes to next dish every 5 seconds (5000ms)
+  // Only paused when user hovers over the showcase section
   useEffect(() => {
+    if (isCarouselHovered) return;
+    const interval = setInterval(() => {
+      handleShowcaseNext();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isCarouselHovered, transitioningFrom, currentSlide]);
+
+  // 1. Load Canteen Catalog with Spring Boot API and offline local fallback
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMenu = async () => {
+      try {
+        setLoading(true);
+        const data = await getMenuCatalog();
+        if (isMounted) {
+          if (Array.isArray(data) && data.length > 0) {
+            setMenuItems(data);
+          } else {
+            setMenuItems(MENU_ITEMS);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.warn('[OfficeBite] API offline, loaded local menu items fallback:', err);
+          setMenuItems(MENU_ITEMS);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchMenu();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Filter and sort items
-  const filteredDishes = useMemo(() => {
-    return menuItems
-      .filter((dish) => {
-        // Category filter
-        if (selectedCategory !== 'all' && dish.category !== selectedCategory) {
-          return false;
-        }
+  // 2. Robust Defensive Fallbacks for Borderless Food Showcase (Homepage Main Signature Dishes)
+  const showcaseList =
+    Array.isArray(HOMEPAGE_SIGNATURE_DISHES) && HOMEPAGE_SIGNATURE_DISHES.length > 0
+      ? HOMEPAGE_SIGNATURE_DISHES
+      : [];
+  const safeSlideIndex =
+    showcaseList.length > 0
+      ? ((currentSlide % showcaseList.length) + showcaseList.length) % showcaseList.length
+      : 0;
 
-        // Search query filter
-        if (searchQuery.trim()) {
-          const query = searchQuery.toLowerCase();
-          const matchesName = dish.name.toLowerCase().includes(query);
-          const matchesDesc = dish.description.toLowerCase().includes(query);
-          const matchesCat = (dish.categoryName || '').toLowerCase().includes(query);
-          if (!matchesName && !matchesDesc && !matchesCat) return false;
-        }
+  const activeDish = showcaseList[safeSlideIndex] || {
+    id: 'showcase-paneer-tikka',
+    name: 'Tandoori Paneer Tikka Platter',
+    badge: 'Tandoor Signature',
+    rating: 4.8,
+    reviewsCount: 265,
+    price: 175,
+    prepTime: '12-15 mins',
+    description:
+      'Charcoal-roasted cottage cheese skewers infused with Kashmiri red chillies, mustard oil, thick hung curd, roasted bell peppers, charred red onions, and tangy mint-coriander chutney.',
+    image: '/assets/images/showcase_paneer_tikka.png',
+  };
 
-        // Quick pills filter
-        if (filterType === 'POPULAR' && !dish.isPopular) return false;
-        if (filterType === 'BUDGET' && dish.price > 100) return false;
+  const prevIndex =
+    showcaseList.length > 0 ? (safeSlideIndex - 1 + showcaseList.length) % showcaseList.length : 0;
+  const nextIndex =
+    showcaseList.length > 0 ? (safeSlideIndex + 1) % showcaseList.length : 0;
 
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'PRICE_ASC') return a.price - b.price;
-        if (sortBy === 'PRICE_DESC') return b.price - a.price;
-        return b.rating - a.rating;
-      });
-  }, [menuItems, selectedCategory, searchQuery, filterType, sortBy]);
-
-  // Featured dishes for carousel
-  const carouselDishes = useMemo(() => {
-    const popular = menuItems.filter((item) => item.isPopular || item.badge);
-    return popular.length > 0 ? popular.slice(0, 5) : menuItems.slice(0, 5);
-  }, [menuItems]);
-
-  // Carousel autoplay timer
-  useEffect(() => {
-    if (carouselDishes.length <= 1 || isCarouselHovered) return;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselDishes.length);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [carouselDishes.length, isCarouselHovered]);
+  const prevDish = showcaseList[prevIndex] || activeDish;
+  const nextDish = showcaseList[nextIndex] || activeDish;
+  const outgoingDish =
+    transitioningFrom !== null && showcaseList[transitioningFrom]
+      ? showcaseList[transitioningFrom]
+      : null;
 
   const activeOrdersCount =
     typeof contextActiveOrdersCount === 'number'
       ? contextActiveOrdersCount
-      : orders.filter((o) =>
-          o.status === 'PLACED' ||
-          o.status === 'ACCEPTED' ||
-          o.status === 'PREPARING' ||
-          o.status === 'READY'
-        ).length;
+      : Array.isArray(orders)
+        ? orders.filter(
+          (o) =>
+            o.status === 'PLACED' ||
+            o.status === 'ACCEPTED' ||
+            o.status === 'PREPARING' ||
+            o.status === 'READY'
+        ).length
+        : 0;
 
   const handleOrderNowClick = (e) => {
     e.preventDefault();
@@ -157,507 +245,701 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] text-[#261C14] selection:bg-[#3D5A2B]/20 selection:text-[#3D5A2B]">
+    <div className="min-h-screen bg-[#121212] text-[#F3F4F6] selection:bg-[#F59E0B]/30 selection:text-[#F59E0B] relative">
       {/* =========================================
-          1. HERO SECTION (Kanigiri Royal Inspiration)
+          1. HERO SECTION (Dark Steakhouse Style + Open Rotating Biryani)
          ========================================= */}
-      <section className="relative overflow-hidden pt-8 pb-20 lg:pt-14 lg:pb-28 border-b border-[#EAE3D6] bg-gradient-to-b from-[#FAF6EE] via-[#FDFBF7] to-[#F5EFEB]">
-        {/* Warm Ambient Radial Accents */}
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-tr from-[#3D5A2B]/10 via-[#D48B18]/15 to-transparent blur-3xl pointer-events-none rounded-full" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D48B18]/10 blur-3xl pointer-events-none rounded-full" />
+      <section className="relative overflow-hidden pt-6 sm:pt-8 lg:pt-10 pb-10 sm:pb-14 lg:pb-16 z-10">
+        {/* Soft Warm Amber Ambient Vignette Glows */}
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-tr from-[#F59E0B]/10 via-[#D97706]/8 to-transparent blur-3xl pointer-events-none rounded-full" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#F59E0B]/10 blur-3xl pointer-events-none rounded-full" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
-            {/* Left Hero Column */}
-            <div className="lg:col-span-7 space-y-7 text-center lg:text-left">
-              {/* Gold Shimmer Royal Badge */}
-              <div className="inline-flex items-center gap-2.5 bg-white px-4 py-2 rounded-full border border-[#EAE3D6] shadow-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D48B18] animate-ping" />
-                <span className="text-xs font-black uppercase tracking-wider text-[#3D5A2B]">
-                  Kanigiri Royal Dining Tradition
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+            {/* Left Hero Column (Smooth, staggered visible text animation matching showcase style) */}
+            <AnimateOnScrollDown
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.12,
+                    delayChildren: 0.08,
+                  },
+                },
+              }}
+              className="lg:col-span-6 space-y-6 text-center lg:text-left"
+            >
+              {/* Luxury Editorial Headline */}
+              <motion.h1
+                variants={{
+                  hidden: { opacity: 0, y: 28, filter: 'blur(6px)' },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                  },
+                }}
+                className="font-['Playfair_Display',serif] text-5xl sm:text-6xl lg:text-7xl font-normal text-white tracking-tight leading-[1.14]"
+              >
+                A Premium<br />
+                And Authentic<br />
+                <span className="font-['Dancing_Script',cursive] font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FDE68A] via-[#F59E0B] to-[#D97706] block sm:inline drop-shadow-sm">
+                  OfficeBite
                 </span>
-                <span className="text-[#D48B18] text-xs font-bold">•</span>
-                <span className="text-xs font-semibold text-[#73675C]">Floor 3 Kitchen Live</span>
-              </div>
-
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#261C14] tracking-tight leading-[1.12]">
-                Rich Heritage Flavors.{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3D5A2B] via-[#507538] to-[#D48B18]">
-                  Crafted for Workdays.
-                </span>
-              </h1>
+              </motion.h1>
 
               {/* Subtitle */}
-              <p className="text-base sm:text-lg text-[#73675C] max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Indulge in authentic royal recipes: slow-cooked North Indian gravies, golden ghee-roasted dosas, aromatic Malabar biryanis, and traditional degree filter coffee.
-              </p>
-
-              {/* Featured Dish Pricing & Rating Pill */}
-              <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-4 p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-[#EAE3D6] shadow-xs">
-                <div className="flex items-center gap-2 pl-2">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#3D5A2B] to-[#507538] text-white flex items-center justify-center font-bold text-xs">
-                    ₹180
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold text-[#261C14]">Royal Executive Thali</p>
-                    <p className="text-[10px] text-[#73675C]">Special Subsidized Employee Rate</p>
-                  </div>
-                </div>
-
-                <div className="h-6 w-px bg-[#EAE3D6] hidden sm:block" />
-
-                <div className="flex items-center gap-1.5 px-2">
-                  <Star className="w-4 h-4 fill-[#E5A93C] text-[#E5A93C]" />
-                  <span className="text-xs font-extrabold text-[#261C14]">4.9 / 5</span>
-                  <span className="text-[11px] text-[#73675C]">(2,400+ orders)</span>
-                </div>
-              </div>
+              <motion.p
+                variants={{
+                  hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                  },
+                }}
+                className="text-base sm:text-lg text-white/65 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal"
+              >
+                Indulge in authentic royal recipes: slow-cooked gravies, golden ghee-roasted dosas, aromatic dum biryanis in sizzling iron skillets, and degree filter coffee.
+              </motion.p>
 
               {/* Call-to-action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                  },
+                }}
+                className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+              >
                 <button
                   type="button"
                   onClick={handleOrderNowClick}
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#3D5A2B] hover:bg-[#2E4620] text-white font-black text-sm tracking-wide shadow-lg shadow-[#3D5A2B]/25 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="w-full sm:w-auto px-8 py-3.5 border border-white/60 hover:border-[#F59E0B] text-white hover:text-[#F59E0B] font-semibold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer bg-white/5 hover:bg-white/10"
                 >
                   <span>Order Now</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 stroke-[2]" />
                 </button>
 
                 <Link
                   to="/menu"
-                  className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white hover:bg-[#FAF6EE] text-[#261C14] border border-[#EAE3D6] hover:border-[#3D5A2B]/50 font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-7 py-3.5 bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm tracking-wider uppercase shadow-lg shadow-[#F59E0B]/25 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
-                  <Utensils className="w-4 h-4 text-[#D48B18]" />
+                  <Utensils className="w-4 h-4" />
                   <span>Explore Menu</span>
                 </Link>
 
                 {activeOrdersCount > 0 && (
                   <Link
                     to="/orders"
-                    className="w-full sm:w-auto px-5 py-4 rounded-2xl bg-[#FDF5E6] hover:bg-[#F8E3BA] text-[#D48B18] border border-[#F8E3BA] font-extrabold text-sm transition-all flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-5 py-3.5 bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 text-[#F59E0B] border border-[#F59E0B]/30 font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-2"
                   >
                     <span>My Active Orders ({activeOrdersCount})</span>
                   </Link>
                 )}
-              </div>
+              </motion.div>
+            </AnimateOnScrollDown>
 
-              {/* Trust Badges */}
-              <div className="pt-6 border-t border-[#EAE3D6] flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-[#73675C]">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-[#EEF3E8] text-[#3D5A2B] flex items-center justify-center">
-                    <Clock className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="font-bold text-[#261C14]">Fast 10-Min Prep</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-[#FDF5E6] text-[#D48B18] flex items-center justify-center">
-                    <MapPin className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="font-bold text-[#261C14]">Desk Delivery Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-[#EEF3E8] text-[#3D5A2B] flex items-center justify-center">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="font-bold text-[#261C14]">FSSAI Certified Kitchen</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Hero Visual with 3D Tilt Card & Food Focus */}
-            <div className="lg:col-span-5 relative perspective-container">
-              <div className="relative mx-auto max-w-md lg:max-w-none tilt-card">
-                {/* Glow behind card */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#3D5A2B]/20 via-[#D48B18]/20 to-transparent rounded-3xl blur-2xl transform rotate-2" />
-
-                <div className="relative bg-white p-3.5 rounded-3xl border border-[#EAE3D6] shadow-2xl overflow-hidden">
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#F2ECE0]">
-                    <img
-                      src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1200&q=80"
-                      alt="Deluxe Royal North Indian Thali freshly prepared"
-                      className="w-full h-full object-cover object-center transform hover:scale-108 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <span className="bg-[#D48B18] text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider shadow-xs">
-                        Chef's Royal Special
-                      </span>
-                      <h3 className="font-extrabold text-xl text-white mt-1.5 tracking-tight">
-                        Deluxe Royal North Indian Thali
-                      </h3>
-                      <p className="text-white/80 text-xs mt-0.5">
-                        Paneer Makhani, Dal Tadka, 2 Ghee Rotis, Pulao & Gulab Jamun
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Card Micro-Interaction Footer */}
-                  <div className="mt-3.5 p-3.5 bg-[#FAF6EE] rounded-2xl flex items-center justify-between border border-[#EAE3D6]/70">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#3D5A2B] text-white flex items-center justify-center font-black text-xs shadow-xs">
-                        ₹180
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#261C14]">Subsidized Meal Rate</p>
-                        <p className="text-[10px] text-[#73675C]">Pre-order for instant pickup</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleOrderNowClick}
-                      className="px-4 py-2 rounded-xl bg-[#3D5A2B] hover:bg-[#2E4620] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <span>Order Plate</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Right Hero Visual (Vertically centered with headline & larger biryani) */}
+            <AnimateOnScrollDown
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-6 relative flex items-center justify-center lg:justify-end"
+            >
+              <BiryaniBowl3D />
+            </AnimateOnScrollDown>
           </div>
         </div>
       </section>
 
       {/* =========================================
-          2. FEATURED DISHES CAROUSEL
+          2. BORDERLESS CINEMATIC FOOD SHOWCASE (EXACT REFERENCE MATCH: SLIDE ONLY, DUAL ARROWS, ZERO SIDE DISHES)
          ========================================= */}
-      {carouselDishes.length > 0 && (
-        <section
-          className="py-14 border-b border-[#EAE3D6] bg-white relative overflow-hidden"
-          onMouseEnter={() => setIsCarouselHovered(true)}
-          onMouseLeave={() => setIsCarouselHovered(false)}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <div>
-                <span className="text-xs font-black uppercase tracking-wider text-[#D48B18]">
-                  Chef's Signature Showcase
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-[#261C14] tracking-tight mt-1">
-                  Royal Culinary Highlights
-                </h2>
-              </div>
+      <section
+        id="food-showcase-section"
+        className="pt-10 sm:pt-14 lg:pt-16 pb-8 sm:pb-10 lg:pb-12 border-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 bg-transparent relative overflow-hidden z-10 select-none"
+        onMouseEnter={() => setIsCarouselHovered(true)}
+        onMouseLeave={() => setIsCarouselHovered(false)}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') handleShowcasePrev();
+          if (e.key === 'ArrowRight') handleShowcaseNext();
+        }}
+      >
+        {/* Subtle warm orange & dark amber ambient glow in background */}
+        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[550px] bg-[radial-gradient(ellipse_at_center,_rgba(245,158,11,0.14)_0%,_rgba(180,83,9,0.06)_50%,_transparent_75%)] blur-3xl pointer-events-none rounded-full" />
+        <div className="absolute bottom-10 right-10 w-[500px] h-[400px] bg-[radial-gradient(ellipse_at_center,_rgba(245,158,11,0.08)_0%,_transparent_70%)] blur-3xl pointer-events-none rounded-full" />
 
-              {/* Prev / Next controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentSlide((prev) => (prev === 0 ? carouselDishes.length - 1 : prev - 1))
-                  }
-                  className="p-2.5 rounded-xl border border-[#EAE3D6] hover:border-[#3D5A2B] text-[#261C14] hover:bg-[#FAF6EE] transition-colors cursor-pointer shadow-2xs"
-                  aria-label="Previous slide"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <div className="flex items-center gap-1 px-2">
-                  {carouselDishes.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setCurrentSlide(idx)}
-                      className={`h-2 rounded-full transition-all cursor-pointer ${
-                        currentSlide === idx ? 'w-6 bg-[#3D5A2B]' : 'w-2 bg-[#EAE3D6]'
-                      }`}
-                      aria-label={`Go to slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentSlide((prev) => (prev + 1) % carouselDishes.length)
-                  }
-                  className="p-2.5 rounded-xl border border-[#EAE3D6] hover:border-[#3D5A2B] text-[#261C14] hover:bg-[#FAF6EE] transition-colors cursor-pointer shadow-2xs"
-                  aria-label="Next slide"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+        {/* Showcase Content Container */}
+        <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Chef's Signature Showcase Heading & Indicator Controls (Smooth scroll-down animation) */}
+          <AnimateOnScrollDown
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: {
+                  duration: 0.8,
+                  ease: [0.16, 1, 0.3, 1],
+                  staggerChildren: 0.12,
+                },
+              },
+            }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3 sm:mb-4 lg:mb-5"
+          >
+            <div>
+              <motion.span
+                variants={{
+                  hidden: { opacity: 0, y: 20, filter: 'blur(5px)' },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                  },
+                }}
+                className="font-['Dancing_Script',cursive] text-2xl sm:text-3xl font-bold text-[#F59E0B] block"
+              >
+                Chef's Signature Showcase
+              </motion.span>
+              <motion.h2
+                variants={{
+                  hidden: { opacity: 0, y: 25, filter: 'blur(5px)' },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                  },
+                }}
+                className="font-['Playfair_Display',serif] text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-1"
+              >
+                Royal Culinary Highlights
+              </motion.h2>
             </div>
 
-            {/* Carousel Active Slide Showcase */}
-            <div className="relative overflow-hidden rounded-3xl bg-[#FAF6EE] border border-[#EAE3D6] shadow-sm">
-              {carouselDishes.map((dish, idx) => (
-                <div
-                  key={dish.id}
-                  className={`transition-all duration-700 ease-in-out ${
-                    currentSlide === idx
-                      ? 'opacity-100 relative translate-x-0'
-                      : 'opacity-0 absolute inset-0 pointer-events-none translate-x-8'
-                  }`}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-12 items-center">
-                    <div className="md:col-span-6 relative aspect-[16/10] md:aspect-auto md:h-96 overflow-hidden">
-                      <img
-                        src={dish.image}
-                        alt={dish.name}
-                        className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-[#D48B18] text-white text-xs font-black uppercase px-3 py-1 rounded-xl shadow-xs">
-                          {dish.badge || 'Chef Selection'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-6 p-6 sm:p-10 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 fill-[#E5A93C] text-[#E5A93C]" />
-                        <span className="font-extrabold text-sm text-[#261C14]">{dish.rating}</span>
-                        <span className="text-xs text-[#73675C]">({dish.reviewsCount || 150} employee reviews)</span>
-                      </div>
-
-                      <h3 className="text-2xl sm:text-3xl font-black text-[#261C14] tracking-tight">
-                        {dish.name}
-                      </h3>
-                      <p className="text-sm text-[#73675C] leading-relaxed">
-                        {dish.description}
-                      </p>
-
-                      <div className="flex items-center gap-6 pt-2">
-                        <div>
-                          <span className="text-[10px] uppercase font-bold text-[#73675C] tracking-wider block">Price</span>
-                          <span className="text-2xl font-black text-[#261C14]">₹{dish.price}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] uppercase font-bold text-[#73675C] tracking-wider block">Prep Time</span>
-                          <span className="text-sm font-extrabold text-[#3D5A2B]">{dish.prepTime}</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => addToCart(dish)}
-                          className="px-6 py-3 rounded-2xl bg-[#3D5A2B] hover:bg-[#2E4620] text-white font-black text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>Add to My Plate</span>
-                        </button>
-                        <a
-                          href="#menu-section"
-                          className="px-5 py-3 rounded-2xl bg-white border border-[#EAE3D6] hover:bg-[#FAF6EE] text-[#261C14] font-bold text-xs sm:text-sm transition-colors"
-                        >
-                          View Full Menu
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* =========================================
-          3. EXPLORE MENU & FILTER SECTION
-         ========================================= */}
-      <section id="menu-section" className="py-16 lg:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-xs font-black uppercase tracking-wider text-[#D48B18]">
-            Fresh Daily Preparation
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#261C14] tracking-tight mt-1">
-            Explore the Royal Canteen Menu
-          </h2>
-          <p className="text-sm text-[#73675C] mt-2">
-            Select authentic hot dishes, customize orders, and pick up fresh with your digital token.
-          </p>
-        </div>
-
-        {/* Search Bar & Filter Controls */}
-        <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D6] shadow-sm mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row items-center gap-3">
-            {/* Search Input */}
-            <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#73675C]" />
-              <input
-                type="text"
-                placeholder="Search dish by name, ingredients, or category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-10 py-3 rounded-2xl bg-[#FAF6EE] border border-[#EAE3D6] text-xs sm:text-sm text-[#261C14] focus:outline-none focus:border-[#3D5A2B] focus:ring-1 focus:ring-[#3D5A2B] transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#73675C] hover:text-[#261C14]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Quick Filter Pills */}
-            <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-              <button
-                type="button"
-                onClick={() => setFilterType('ALL')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  filterType === 'ALL'
-                    ? 'bg-[#3D5A2B] text-white shadow-xs'
-                    : 'bg-[#FAF6EE] text-[#73675C] hover:text-[#261C14]'
-                }`}
-              >
-                All Dishes
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterType('POPULAR')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  filterType === 'POPULAR'
-                    ? 'bg-[#3D5A2B] text-white shadow-xs'
-                    : 'bg-[#FAF6EE] text-[#73675C] hover:text-[#261C14]'
-                }`}
-              >
-                ★ Chef Favorites
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterType('BUDGET')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  filterType === 'BUDGET'
-                    ? 'bg-[#3D5A2B] text-white shadow-xs'
-                    : 'bg-[#FAF6EE] text-[#73675C] hover:text-[#261C14]'
-                }`}
-              >
-                Under ₹100
-              </button>
-            </div>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-[#EAE3D6] no-scrollbar">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat.id
-                    ? 'bg-[#3D5A2B] text-white shadow-sm'
-                    : 'bg-[#FAF6EE] text-[#73675C] hover:text-[#261C14] hover:bg-[#F2ECE0]'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Results Count & Sort Dropdown */}
-        <div className="flex items-center justify-between gap-4 mb-6 text-xs text-[#73675C]">
-          <p>
-            Showing <strong className="text-[#261C14]">{filteredDishes.length}</strong> delicious options
-          </p>
-          <div className="flex items-center gap-2">
-            <span>Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl bg-white border border-[#EAE3D6] text-xs font-bold text-[#261C14] focus:outline-none focus:border-[#3D5A2B]"
-            >
-              <option value="POPULAR">Most Popular</option>
-              <option value="PRICE_ASC">Price: Low to High</option>
-              <option value="PRICE_DESC">Price: High to Low</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Dish Grid with 3D Tilt FoodCards */}
-        {loading ? (
-          <div className="py-20 text-center space-y-3">
-            <div className="w-10 h-10 border-3 border-[#3D5A2B] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-[#73675C]">Loading fresh canteen catalog...</p>
-          </div>
-        ) : filteredDishes.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredDishes.map((dish) => (
-              <FoodCard key={dish.id} dish={dish} />
-            ))}
-          </div>
-        ) : (
-          <div className="py-16 text-center bg-white rounded-3xl border border-[#EAE3D6] p-8">
-            <Utensils className="w-10 h-10 text-[#D48B18] mx-auto mb-3" />
-            <h3 className="font-bold text-base text-[#261C14]">No dishes matched your selection</h3>
-            <p className="text-xs text-[#73675C] mt-1 max-w-sm mx-auto">
-              Try adjusting your category filter, clearing your search query, or viewing all dishes.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCategory('all');
-                setSearchQuery('');
-                setFilterType('ALL');
+            {/* Dish counter in luxury typography */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, scale: 0.85 },
+                visible: {
+                  opacity: 1,
+                  scale: 1,
+                  transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+                },
               }}
-              className="mt-4 px-4 py-2 rounded-xl bg-[#3D5A2B] text-white text-xs font-bold hover:bg-[#2E4620] cursor-pointer"
+              className="flex items-center gap-3 self-end sm:self-auto"
             >
-              Reset Filters
-            </button>
+              <div className="flex items-baseline gap-1.5 font-['Playfair_Display',serif] text-sm text-white/50">
+                <span className="text-xl font-bold text-[#F59E0B]">
+                  {String(currentSlide + 1).padStart(2, '0')}
+                </span>
+                <span>/</span>
+                <span className="text-xs text-white/40">
+                  {String(showcaseList.length).padStart(2, '0')}
+                </span>
+              </div>
+            </motion.div>
+          </AnimateOnScrollDown>
+
+          {/* Main Showcase Grid: Left Dominant Food Stage + Right Open Information */}
+          <div className="relative">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-start">
+              {/* Left Column: Food Stage (Clean scale-in, completely stable, ZERO rotation) */}
+              <AnimateOnScrollDown
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="lg:col-span-7 relative flex items-center justify-center select-none py-0 sm:py-1"
+              >
+                {/* Ambient warm radial spotlight glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] sm:w-[520px] lg:w-[640px] aspect-square rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(245,158,11,0.2)_0%,_rgba(217,119,6,0.06)_50%,_transparent_72%)] blur-3xl pointer-events-none" />
+
+                {/* The Food Cluster — Food Plate with Left and Right Arrows Immediately Flanking It */}
+                <div className="relative flex items-center justify-center">
+                  {/* Subtle Left Navigation Arrow: Immediately beside the food image on the left, vertically centered */}
+                  <button
+                    type="button"
+                    onClick={handleShowcasePrev}
+                    aria-label="Previous dish"
+                    className="absolute -left-4 sm:-left-6 md:-left-8 lg:-left-9 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1A1A1A]/85 hover:bg-[#252525] border border-white/10 hover:border-[#F59E0B]/50 text-white/70 hover:text-[#F59E0B] shadow-xl backdrop-blur-md transition-all duration-300 flex items-center justify-center cursor-pointer active:scale-95 group"
+                  >
+                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                  </button>
+
+                  {/* The Dominant Food Plate Stage (Responsive, zero cropping, tight luxury fit) */}
+                  <div className="food-visual-stage relative w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] md:w-[450px] md:h-[450px] lg:w-[510px] lg:h-[510px] xl:w-[560px] xl:h-[560px] flex items-center justify-center will-change-transform z-20 p-1 sm:p-2">
+                    {/* Outgoing Food Plate (Slides horizontally out without distortion - Zero Rotation) */}
+                    {outgoingDish && (
+                      <div
+                        key={`outgoing-${outgoingDish.id}`}
+                        className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none select-none p-2 sm:p-4"
+                        style={{
+                          transform:
+                            slideDirection === 'next'
+                              ? 'translateX(-100%)'
+                              : 'translateX(100%)',
+                          opacity: 0,
+                          transition: 'transform 500ms cubic-bezier(0.25, 1, 0.5, 1), opacity 420ms ease-out',
+                        }}
+                      >
+                        <img
+                          src={outgoingDish.image}
+                          alt={outgoingDish.name}
+                          draggable={false}
+                          className="w-full h-full object-contain pointer-events-none select-none anim-showcase-dish drop-shadow-[0_28px_55px_rgba(0,0,0,0.95)]"
+                          onError={(e) => {
+                            e.currentTarget.src = '/assets/images/showcase_paneer_tikka.png';
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Active / Incoming Food Plate (Slides horizontally in - Zero Rotation) */}
+                    <div
+                      key={`active-${activeDish.id}-${transitioningFrom !== null ? slideDirection : 'idle'}`}
+                      className={`w-full h-full flex items-center justify-center pointer-events-none select-none p-2 sm:p-4 ${transitioningFrom !== null
+                          ? slideDirection === 'next'
+                            ? 'animate-dish-slide-next'
+                            : 'animate-dish-slide-prev'
+                          : ''
+                        }`}
+                      style={{
+                        transformOrigin: 'center center',
+                      }}
+                    >
+                      <img
+                        src={activeDish.image}
+                        alt={activeDish.name}
+                        draggable={false}
+                        className="w-full h-full object-contain pointer-events-none select-none anim-showcase-dish drop-shadow-[0_28px_55px_rgba(0,0,0,0.95)]"
+                        loading="eager"
+                        onError={(e) => {
+                          e.currentTarget.src = '/assets/images/showcase_paneer_tikka.png';
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Subtle Right Navigation Arrow: Immediately beside the food image on the right, vertically centered */}
+                  <button
+                    type="button"
+                    onClick={handleShowcaseNext}
+                    aria-label="Next dish"
+                    className="absolute -right-4 sm:-right-6 md:-right-8 lg:-right-9 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1A1A1A]/85 hover:bg-[#252525] border border-white/10 hover:border-[#F59E0B]/50 text-white/70 hover:text-[#F59E0B] shadow-xl backdrop-blur-md transition-all duration-300 flex items-center justify-center cursor-pointer active:scale-95 group"
+                  >
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </AnimateOnScrollDown>
+
+              {/* Right Column: Food Details (Crisp, snappy staggered visible text animation on scroll down) */}
+              <AnimateOnScrollDown
+                key={`details-${activeDish.id}`}
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.11,
+                      delayChildren: 0.08,
+                    },
+                  },
+                }}
+                className="lg:col-span-5 relative z-10 space-y-4 sm:space-y-5 text-center lg:text-left lg:pl-4 xl:pl-6 lg:pt-3 xl:pt-4"
+              >
+                {/* Bestseller / Signature Badge */}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      filter: 'blur(0px)',
+                      transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                  className="flex items-center justify-center lg:justify-start"
+                >
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 tracking-wide">
+                    <Flame className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
+                    <span>{activeDish.badge || 'Bestseller'}</span>
+                  </span>
+                </motion.div>
+
+                {/* Dish Name in Luxury Serif Typography */}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 28, filter: 'blur(6px)' },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      filter: 'blur(0px)',
+                      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                >
+                  <h3 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl lg:text-5xl font-normal text-white tracking-tight leading-tight">
+                    {activeDish.name}
+                  </h3>
+                </motion.div>
+
+                {/* Price & Rating */}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      filter: 'blur(0px)',
+                      transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                  className="space-y-1.5"
+                >
+                  <div className="text-3xl sm:text-4xl font-extrabold text-[#F59E0B]">
+                    ₹{activeDish.price}
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start gap-2 text-sm">
+                    <div className="flex items-center text-amber-400">
+                      <Star className="w-4 h-4 fill-current text-amber-400" />
+                    </div>
+                    <span className="font-bold text-white">{activeDish.rating}</span>
+                    <span className="text-white/50">({activeDish.reviewsCount} reviews)</span>
+                  </div>
+                </motion.div>
+
+                {/* Dietary & Feature Tags */}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      filter: 'blur(0px)',
+                      transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                  className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1"
+                >
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1A1A1A] border border-white/10 text-white/80">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        activeDish.isVeg !== false ? 'bg-emerald-500' : 'bg-rose-500'
+                      }`}
+                    />
+                    <span>{activeDish.isVeg !== false ? 'Veg Delight' : "Chef's Special"}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1A1A1A] border border-white/10 text-white/80">
+                    <Utensils className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Basmati Rice</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1A1A1A] border border-white/10 text-white/80">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Traditional Flavors</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1A1A1A] border border-white/10 text-white/80">
+                    <Utensils className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Raita & Salad</span>
+                  </span>
+                </motion.div>
+
+                {/* Action Buttons: Add to My Plate & View Full Menu */}
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      filter: 'blur(0px)',
+                      transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                  className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addToCart(activeDish);
+                      if (showToast) {
+                        showToast(`Added ${activeDish.name} to your food tray!`, 'success');
+                      }
+                    }}
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-bold text-sm tracking-wide shadow-lg shadow-[#F59E0B]/25 hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    <Plus className="w-4 h-4 stroke-[2.8]" />
+                    <span>Add to My Plate</span>
+                  </button>
+
+                  <Link
+                    to="/menu"
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-transparent hover:bg-white/5 text-white border border-white/25 hover:border-[#F59E0B]/60 font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>View Full Menu</span>
+                  </Link>
+                </motion.div>
+              </AnimateOnScrollDown>
+            </div>
           </div>
-        )}
+        </div>
       </section>
 
       {/* =========================================
-          4. KANIGIRI CULINARY HERITAGE & TRUST
+          3. MASTER CHEF LIVE COOKING & FLAME WOK SHOWCASE (Borderless, Floating & Lively Bouncing)
          ========================================= */}
-      <section className="py-16 bg-white border-t border-[#EAE3D6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-black uppercase tracking-wider text-[#D48B18]">
-              Culinary Philosophy
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#261C14] tracking-tight mt-1">
-              Why OfficeBite Dining Excels
-            </h2>
+      <section className="relative z-10 pt-8 sm:pt-12 lg:pt-16 pb-10 sm:pb-14 lg:pb-20 overflow-hidden bg-transparent border-none outline-none focus:outline-none focus-visible:outline-none ring-0">
+        {/* Soft Ambient Warm Glow in Background */}
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,_rgba(245,158,11,0.12)_0%,_rgba(217,119,6,0.03)_50%,_transparent_72%)] blur-3xl pointer-events-none -z-10" />
+
+        <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-center">
+            
+            {/* LEFT COLUMN: Clean 2-3 Line Content & Typography (Matching Reference Layout, Completely Unboxed) */}
+            <AnimateOnScrollDown
+              initial={{ opacity: 0, y: 55 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-5 xl:col-span-5 space-y-6 text-left select-none"
+            >
+              {/* Headline — Exactly Matching Reference Style */}
+              <h2 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-normal text-white tracking-tight leading-[1.08]">
+                A Fiery <br />
+                And Authentic <br />
+                <span className="font-['Dancing_Script',cursive] text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-[#F59E0B] block mt-1 drop-shadow-sm">
+                  OfficeBite
+                </span>
+              </h2>
+
+              {/* Simple 2 to 3 Lines of Cooking Content */}
+              <p className="text-sm sm:text-base lg:text-lg text-white/70 leading-relaxed font-normal max-w-lg">
+                Savor the sizzle of live high-flame wok tosses, hand-ground heirloom masalas, and farm-fresh ingredients cooked hot to order with royal culinary passion.
+              </p>
+
+              {/* Action Button — Primary ORDER NOW */}
+              <div className="pt-2 flex items-center">
+                <Link
+                  to="/menu"
+                  className="px-7 sm:px-8 py-3.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm tracking-wider uppercase transition-all flex items-center gap-2.5 shadow-lg shadow-[#F59E0B]/25 hover:shadow-[#F59E0B]/40 hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <span>ORDER NOW</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </AnimateOnScrollDown>
+
+            {/* RIGHT COLUMN: Large Chef Image with Fast Bounce & Floating Masala Powders (Free & Unboxed) */}
+            <AnimateOnScrollDown
+              initial={{ opacity: 0, y: 70, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-7 xl:col-span-7 relative flex items-center justify-center lg:justify-end select-none"
+            >
+              {/* Masala Powder Dust Cloud 1 (Golden Turmeric & Saffron Halo) */}
+              <div className="absolute top-4 right-4 w-88 h-88 sm:w-[480px] sm:h-[480px] rounded-full bg-[radial-gradient(circle,_rgba(245,158,11,0.28)_0%,_rgba(217,119,6,0.1)_45%,_transparent_72%)] blur-2xl animate-powder-pulse pointer-events-none -z-10" />
+
+              {/* Masala Powder Dust Cloud 2 (Kashmiri Chilli & Paprika Flame Flare) */}
+              <div
+                className="absolute bottom-8 right-16 w-80 h-80 sm:w-[420px] sm:h-[420px] rounded-full bg-[radial-gradient(circle,_rgba(239,68,68,0.22)_0%,_rgba(185,28,28,0.06)_50%,_transparent_72%)] blur-2xl animate-powder-pulse pointer-events-none -z-10"
+                style={{ animationDelay: '1.2s' }}
+              />
+
+              {/* Wok Flame Core Glow */}
+              <div className="absolute top-1/2 right-1/4 -translate-y-1/4 w-64 h-64 rounded-full bg-[radial-gradient(circle,_rgba(255,140,0,0.38)_0%,_rgba(239,68,68,0.16)_40%,_transparent_70%)] blur-xl pointer-events-none -z-10" />
+
+              {/* Floating Whole Spices & Masala Elements around the Wok */}
+              
+              {/* Star Anise (Chakra Phool) - Drifting top-right */}
+              <div className="absolute top-6 right-8 z-20 pointer-events-none animate-spice-slow opacity-90 drop-shadow-[0_8px_16px_rgba(0,0,0,0.85)]">
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
+                  {/* Star Anise 8-petal shape */}
+                  <g fill="#92400E" stroke="#78350F" strokeWidth="2">
+                    <path d="M50 10 C46 25 46 35 50 50 C54 35 54 25 50 10 Z" />
+                    <path d="M50 90 C46 75 46 65 50 50 C54 65 54 75 50 90 Z" />
+                    <path d="M10 50 C25 46 35 46 50 50 C35 54 25 54 10 50 Z" />
+                    <path d="M90 50 C75 46 65 46 50 50 C65 54 75 54 90 50 Z" />
+                    <path d="M22 22 C34 32 40 38 50 50 C40 42 32 34 22 22 Z" />
+                    <path d="M78 78 C66 68 60 62 50 50 C60 58 68 66 78 78 Z" />
+                    <path d="M78 22 C66 32 60 38 50 50 C60 42 68 34 78 22 Z" />
+                    <path d="M22 78 C34 68 40 62 50 50 C40 58 32 66 22 78 Z" />
+                  </g>
+                  {/* Glossy seeds inside pods */}
+                  <circle cx="50" cy="22" r="3.5" fill="#F59E0B" />
+                  <circle cx="50" cy="78" r="3.5" fill="#F59E0B" />
+                  <circle cx="22" cy="50" r="3.5" fill="#F59E0B" />
+                  <circle cx="78" cy="50" r="3.5" fill="#F59E0B" />
+                  <circle cx="30" cy="30" r="3" fill="#FBBF24" />
+                  <circle cx="70" cy="70" r="3" fill="#FBBF24" />
+                  <circle cx="70" cy="30" r="3" fill="#FBBF24" />
+                  <circle cx="30" cy="70" r="3" fill="#FBBF24" />
+                  <circle cx="50" cy="50" r="6" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+                </svg>
+              </div>
+
+              {/* Cardamom Pod (Elaichi) - Drifting mid-left */}
+              <div className="absolute top-1/3 left-6 z-20 pointer-events-none animate-spice-med opacity-90 drop-shadow-[0_8px_16px_rgba(0,0,0,0.85)]">
+                <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
+                  {/* Ribbed Cardamom pod */}
+                  <path
+                    d="M50 12 C30 35 28 65 50 88 C72 65 70 35 50 12 Z"
+                    fill="#65A30D"
+                    stroke="#4D7C0F"
+                    strokeWidth="3"
+                  />
+                  {/* Ribs */}
+                  <path d="M50 14 Q38 48 50 86" stroke="#84CC16" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                  <path d="M50 14 Q62 48 50 86" stroke="#84CC16" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                  <path d="M50 14 L50 86" stroke="#A3E635" strokeWidth="2" strokeLinecap="round" />
+                  {/* Stem tip */}
+                  <path d="M50 12 L50 6" stroke="#4D7C0F" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </div>
+
+              {/* Cinnamon Stick (Dalchini) - Drifting bottom-left */}
+              <div className="absolute bottom-16 left-8 z-20 pointer-events-none animate-spice-fast opacity-85 drop-shadow-[0_8px_16px_rgba(0,0,0,0.85)]">
+                <svg width="46" height="46" viewBox="0 0 100 100" fill="none">
+                  <g transform="rotate(-35 50 50)">
+                    <rect x="25" y="42" width="50" height="16" rx="6" fill="#78350F" stroke="#451A03" strokeWidth="2" />
+                    <line x1="30" y1="46" x2="70" y2="46" stroke="#B45309" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="28" y1="52" x2="68" y2="52" stroke="#92400E" strokeWidth="2" strokeLinecap="round" />
+                    <ellipse cx="27" cy="50" rx="4" ry="6" fill="#451A03" />
+                  </g>
+                </svg>
+              </div>
+
+              {/* Curry Leaf - Floating near tossed food */}
+              <div className="absolute top-16 right-36 z-20 pointer-events-none animate-spice-med opacity-90 drop-shadow-[0_6px_12px_rgba(0,0,0,0.8)]">
+                <img src="/assets/images/curry_leaves.svg" alt="" className="w-10 h-10 drop-shadow-md rotate-12" />
+              </div>
+
+              {/* Floating Masala Powder Particles / Sparks */}
+              <div className="absolute top-24 right-20 w-3 h-3 rounded-full bg-[#F59E0B] shadow-[0_0_12px_#F59E0B] animate-mote" style={{ animationDelay: '0.1s' }} />
+              <div className="absolute top-44 right-14 w-2.5 h-2.5 rounded-full bg-[#EF4444] shadow-[0_0_10px_#EF4444] animate-mote" style={{ animationDelay: '0.6s' }} />
+              <div className="absolute top-1/2 right-48 w-3.5 h-3.5 rounded-full bg-[#FBBF24] shadow-[0_0_14px_#FBBF24] animate-mote" style={{ animationDelay: '0.9s' }} />
+              <div className="absolute bottom-28 right-24 w-2.5 h-2.5 rounded-full bg-[#F59E0B] shadow-[0_0_10px_#F59E0B] animate-mote" style={{ animationDelay: '1.2s' }} />
+              <div className="absolute bottom-44 right-44 w-2 h-2 rounded-full bg-[#EF4444] shadow-[0_0_8px_#EF4444] animate-mote" style={{ animationDelay: '0.4s' }} />
+              <div className="absolute top-14 right-52 w-2.5 h-2.5 rounded-full bg-[#FCD34D] shadow-[0_0_10px_#FCD34D] animate-mote" style={{ animationDelay: '0.8s' }} />
+
+              {/* Sizzling Floor Contact Shadow */}
+              <div className="absolute -bottom-2 w-full h-10 bg-black/80 blur-2xl rounded-full pointer-events-none" />
+
+              {/* The Chef Image (Masked & Feathered at the bottom to eliminate any straight line) */}
+              <div
+                className="relative z-10 w-full max-w-[650px] sm:max-w-[760px] md:max-w-[880px] lg:max-w-[980px] xl:max-w-[1080px] flex items-center justify-center animate-chef-bounce"
+                style={{
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 72%, rgba(0,0,0,0.75) 84%, rgba(0,0,0,0.15) 94%, transparent 100%)',
+                  maskImage: 'linear-gradient(to bottom, black 0%, black 72%, rgba(0,0,0,0.75) 84%, rgba(0,0,0,0.15) 94%, transparent 100%)',
+                }}
+              >
+                <img
+                  src="/assets/images/chef_cooking_flame.png"
+                  alt="Master chef tossing flame-sizzled fresh ingredients in a wok"
+                  draggable={false}
+                  className="w-full h-auto object-contain pointer-events-none select-none drop-shadow-[0_28px_60px_rgba(0,0,0,0.95)]"
+                />
+
+                {/* Bottom Edge Blur Overlay to ensure a completely seamless transition into dark background */}
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#121212] via-[#121212]/70 to-transparent blur-md pointer-events-none" />
+              </div>
+            </AnimateOnScrollDown>
+
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-6 rounded-3xl bg-[#FAF6EE] border border-[#EAE3D6] space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#EEF3E8] text-[#3D5A2B] flex items-center justify-center font-bold">
-                <Flame className="w-6 h-6" />
-              </div>
-              <h4 className="font-extrabold text-base text-[#261C14]">Artisan Heritage Recipes</h4>
-              <p className="text-xs text-[#73675C] leading-relaxed">
-                Slow-simmered gravies, hand-roasted spice masalas, and traditional clay-pot techniques inspired by Kanigiri culinary lore.
-              </p>
-            </div>
+      {/* =========================================
+          4. MASTER DESK DELIVERY SHOWCASE (Delivery Image on Left, Reference Typography on Right, Completely Unboxed)
+         ========================================= */}
+      <section className="relative z-10 pt-10 sm:pt-14 lg:pt-20 pb-16 sm:pb-20 lg:pb-24 overflow-hidden bg-transparent border-none outline-none focus:outline-none focus-visible:outline-none ring-0">
+        {/* Soft Ambient Warm Glow in Background */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,_rgba(245,158,11,0.12)_0%,_rgba(217,119,6,0.03)_50%,_transparent_72%)] blur-3xl pointer-events-none -z-10" />
 
-            <div className="p-6 rounded-3xl bg-[#FAF6EE] border border-[#EAE3D6] space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#FDF5E6] text-[#D48B18] flex items-center justify-center font-bold">
-                <Award className="w-6 h-6" />
-              </div>
-              <h4 className="font-extrabold text-base text-[#261C14]">Fresh Daily Produce</h4>
-              <p className="text-xs text-[#73675C] leading-relaxed">
-                Crisp farm vegetables and organic dairy sourced at daybreak. Zero artificial preservatives or frozen bases.
-              </p>
-            </div>
+        <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-center">
+            
+            {/* LEFT COLUMN: Large Delivery Partner Image with Natural Bounce (Free & Unboxed, on the Left) */}
+            <AnimateOnScrollDown
+              initial={{ opacity: 0, y: 70, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-7 xl:col-span-7 relative flex items-center justify-center lg:justify-start select-none"
+            >
+              {/* Golden Aura Dust Cloud 1 */}
+              <div className="absolute top-4 left-4 w-88 h-88 sm:w-[500px] sm:h-[500px] rounded-full bg-[radial-gradient(circle,_rgba(245,158,11,0.25)_0%,_rgba(217,119,6,0.08)_45%,_transparent_72%)] blur-2xl animate-powder-pulse pointer-events-none -z-10" />
 
-            <div className="p-6 rounded-3xl bg-[#FAF6EE] border border-[#EAE3D6] space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#EEF3E8] text-[#3D5A2B] flex items-center justify-center font-bold">
-                <Clock className="w-6 h-6" />
-              </div>
-              <h4 className="font-extrabold text-base text-[#261C14]">Zero-Wait Ordering</h4>
-              <p className="text-xs text-[#73675C] leading-relaxed">
-                Place your food order from your desk, track kitchen cooking status in real-time, and pick up hot without standing in lines.
-              </p>
-            </div>
+              {/* Kashmiri Flame & Saffron Glow 2 */}
+              <div
+                className="absolute bottom-8 left-16 w-80 h-80 sm:w-[440px] sm:h-[440px] rounded-full bg-[radial-gradient(circle,_rgba(239,68,68,0.18)_0%,_rgba(185,28,28,0.05)_50%,_transparent_72%)] blur-2xl animate-powder-pulse pointer-events-none -z-10"
+                style={{ animationDelay: '1.2s' }}
+              />
 
-            <div className="p-6 rounded-3xl bg-[#FAF6EE] border border-[#EAE3D6] space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#FDF5E6] text-[#D48B18] flex items-center justify-center font-bold">
-                <Coffee className="w-6 h-6" />
+              {/* Warm Speed Core Glow */}
+              <div className="absolute top-1/2 left-1/4 -translate-y-1/4 w-64 h-64 rounded-full bg-[radial-gradient(circle,_rgba(255,140,0,0.32)_0%,_rgba(239,68,68,0.12)_40%,_transparent_70%)] blur-xl pointer-events-none -z-10" />
+
+              {/* Floor Contact Shadow */}
+              <div className="absolute -bottom-2 w-full h-10 bg-black/80 blur-2xl rounded-full pointer-events-none" />
+
+              {/* The Delivery Partner Image (Masked & Feathered at the bottom to eliminate any straight line) */}
+              <div
+                className="relative z-10 w-full max-w-[650px] sm:max-w-[760px] md:max-w-[880px] lg:max-w-[980px] xl:max-w-[1080px] flex items-center justify-center animate-chef-bounce"
+                style={{
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 72%, rgba(0,0,0,0.75) 84%, rgba(0,0,0,0.15) 94%, transparent 100%)',
+                  maskImage: 'linear-gradient(to bottom, black 0%, black 72%, rgba(0,0,0,0.75) 84%, rgba(0,0,0,0.15) 94%, transparent 100%)',
+                }}
+              >
+                <img
+                  src="/assets/images/delivery_hero.png"
+                  alt="OfficeBite delivery partner delivering piping-hot royal food"
+                  draggable={false}
+                  className="w-full h-auto object-contain pointer-events-none select-none drop-shadow-[0_28px_60px_rgba(0,0,0,0.95)]"
+                />
+
+                {/* Bottom Edge Blur Overlay to ensure a completely seamless transition into dark background */}
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#121212] via-[#121212]/70 to-transparent blur-md pointer-events-none" />
               </div>
-              <h4 className="font-extrabold text-base text-[#261C14]">Authentic Beverages</h4>
-              <p className="text-xs text-[#73675C] leading-relaxed">
-                Kumbakonam degree filter coffee, ginger chai, and fresh seasonal juices to keep your workdays energized.
+            </AnimateOnScrollDown>
+
+            {/* RIGHT COLUMN: Clean 2-3 Line Content & Typography (Matching Reference Layout, Completely Unboxed) */}
+            <AnimateOnScrollDown
+              initial={{ opacity: 0, y: 55 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-5 xl:col-span-5 space-y-6 text-left select-none lg:pl-4 xl:pl-6"
+            >
+              {/* Headline — Exactly Matching Reference Style */}
+              <h2 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-normal text-white tracking-tight leading-[1.08]">
+                Swift & Hot <br />
+                Desk Delivery <br />
+                <span className="font-['Dancing_Script',cursive] text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-[#F59E0B] block mt-1 drop-shadow-sm">
+                  OfficeBite
+                </span>
+              </h2>
+
+              {/* Simple 2 to 3 Lines of Delivery Content */}
+              <p className="text-sm sm:text-base lg:text-lg text-white/70 leading-relaxed font-normal max-w-lg">
+                From our master flame wok straight to your workspace desk. Insulated thermal packaging locks in piping-hot freshness with zero wait time.
               </p>
-            </div>
+
+              {/* Action Button — Primary ORDER NOW */}
+              <div className="pt-2 flex items-center">
+                <Link
+                  to="/menu"
+                  className="px-7 sm:px-8 py-3.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm tracking-wider uppercase transition-all flex items-center gap-2.5 shadow-lg shadow-[#F59E0B]/25 hover:shadow-[#F59E0B]/40 hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <span>ORDER NOW</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </AnimateOnScrollDown>
+
           </div>
         </div>
       </section>
@@ -666,3 +948,9 @@ export const HomePage = () => {
 };
 
 export default HomePage;
+
+
+
+
+
+

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ShoppingBag,
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Clock,
   ShieldCheck,
   User,
   MapPin,
@@ -23,7 +22,6 @@ import { createOrder } from '../services/api';
 import { getCanonicalDish } from '../data/mockData';
 
 export const CheckoutPage = () => {
-  const navigate = useNavigate();
   const { cartItems, clearCart, setOrders, refreshOrders, showToast } = useCart();
   const { currentUser, isAuthenticated, openAuthModal } = useAuth();
 
@@ -176,54 +174,54 @@ export const CheckoutPage = () => {
   // ----------------------------------------------------
   if (confirmedOrder) {
     return (
-      <div className="min-h-screen py-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#121212] text-[#F3F4F6] py-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Celebration Header */}
         <div className="text-center mb-8">
-          <div className="w-18 h-18 rounded-full bg-[#EBF5F0] text-[#197A50] flex items-center justify-center mx-auto mb-4 shadow-sm animate-scale-up">
+          <div className="w-18 h-18 rounded-full bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex items-center justify-center mx-auto mb-4 shadow-sm animate-scale-up">
             <CheckCircle2 className="w-10 h-10 stroke-[2.2]" />
           </div>
-          <span className="text-xs font-bold text-[#197A50] uppercase tracking-wider bg-[#EBF5F0] px-3.5 py-1 rounded-full">
+          <span className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider bg-[#F59E0B]/15 px-3.5 py-1 rounded-full border border-[#F59E0B]/30">
             Order Saved to Database
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#292524] tracking-tight mt-2.5">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-2.5">
             Order Confirmed!
           </h1>
-          <p className="text-xs sm:text-sm text-[#78716C] mt-1.5 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-white/60 mt-1.5 max-w-md mx-auto">
             Your order has been saved and dispatched to the Floor 3 Live Canteen kitchen.
           </p>
         </div>
 
         {/* Real Order Token Card */}
-        <div className="bg-gradient-to-br from-[#197A50] to-[#125B3C] text-white rounded-3xl p-6 sm:p-8 shadow-xl mb-8 relative overflow-hidden">
-          <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="bg-gradient-to-br from-[#292929] to-[#171717] border border-white/10 text-white rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 relative overflow-hidden">
+          <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-44 h-44 bg-[#F59E0B]/10 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
             <div>
-              <span className="text-xs font-bold tracking-wider uppercase text-emerald-200 block">
+              <span className="text-xs font-bold tracking-wider uppercase text-[#F59E0B] block">
                 Pickup Token Number
               </span>
               <div className="flex items-baseline gap-3 mt-1">
                 <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
                   {confirmedOrder.tokenNumber}
                 </span>
-                <span className="text-xs text-emerald-100 bg-white/20 px-2.5 py-1 rounded-full font-semibold">
+                <span className="text-xs text-amber-300 bg-white/10 px-2.5 py-1 rounded-full font-semibold border border-white/10">
                   {confirmedOrder.statusLabel || confirmedOrder.status}
                 </span>
               </div>
-              <p className="text-xs text-emerald-100 mt-2 max-w-sm">
+              <p className="text-xs text-white/70 mt-2 max-w-sm">
                 Display this token number at{' '}
-                <strong>{confirmedOrder.deliveryLocation}</strong> when your order is called.
+                <strong className="text-white">{confirmedOrder.deliveryLocation}</strong> when your order is called.
               </p>
             </div>
 
-            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 sm:p-5 text-center min-w-[180px] border border-white/20">
-              <span className="text-[11px] uppercase tracking-wider text-emerald-200 block font-semibold">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 sm:p-5 text-center min-w-[180px] border border-white/10">
+              <span className="text-[11px] uppercase tracking-wider text-white/60 block font-semibold">
                 Official Order ID
               </span>
-              <span className="text-xl sm:text-2xl font-black text-white block mt-0.5">
+              <span className="text-xl sm:text-2xl font-black text-[#F59E0B] block mt-0.5">
                 #{confirmedOrder.orderNumber}
               </span>
-              <span className="text-[11px] text-emerald-200 mt-1 block">
+              <span className="text-[11px] text-white/50 mt-1 block">
                 MySQL ID: {confirmedOrder.id}
               </span>
             </div>
@@ -231,70 +229,70 @@ export const CheckoutPage = () => {
         </div>
 
         {/* Order Details & Receipt Breakdown */}
-        <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs p-6 sm:p-8 space-y-6 mb-8">
-          <div className="flex items-center justify-between pb-4 border-b border-[#F4EFE6]">
-            <h3 className="font-extrabold text-base text-[#292524] flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-[#197A50]" />
+        <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xl p-6 sm:p-8 space-y-6 mb-8 text-white">
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+            <h3 className="font-extrabold text-base text-white flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-[#F59E0B]" />
               <span>Canteen Order Summary</span>
             </h3>
-            <span className="text-xs text-[#78716C]">
+            <span className="text-xs text-white/50">
               Placed at: {new Date(confirmedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
 
           {/* Customer & Location Metadata */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-            <div className="p-3.5 rounded-2xl bg-[#FAF8F2] border border-[#EDE8DC]">
-              <span className="text-[#78716C] block font-medium">Customer</span>
-              <span className="font-bold text-[#292524] text-sm mt-0.5 block">
+            <div className="p-3.5 rounded-2xl bg-[#262626] border border-white/10">
+              <span className="text-white/60 block font-medium">Customer</span>
+              <span className="font-bold text-white text-sm mt-0.5 block">
                 {confirmedOrder.customerName}
               </span>
               {confirmedOrder.employeeId && (
-                <span className="text-[#78716C]">Emp ID: {confirmedOrder.employeeId}</span>
+                <span className="text-white/50">Emp ID: {confirmedOrder.employeeId}</span>
               )}
             </div>
-            <div className="p-3.5 rounded-2xl bg-[#FAF8F2] border border-[#EDE8DC]">
-              <span className="text-[#78716C] block font-medium">Station</span>
-              <span className="font-bold text-[#292524] text-sm mt-0.5 block truncate">
+            <div className="p-3.5 rounded-2xl bg-[#262626] border border-white/10">
+              <span className="text-white/60 block font-medium">Station</span>
+              <span className="font-bold text-white text-sm mt-0.5 block truncate">
                 {confirmedOrder.deliveryLocation}
               </span>
-              <span className="text-[#78716C]">{confirmedOrder.deliveryType}</span>
+              <span className="text-white/50">{confirmedOrder.deliveryType}</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-[#FAF8F2] border border-[#EDE8DC]">
-              <span className="text-[#78716C] block font-medium">Estimated Kitchen Prep</span>
-              <span className="font-bold text-[#197A50] text-sm mt-0.5 block">10-15 Minutes</span>
-              <span className="text-[#78716C]">Live kitchen active</span>
+            <div className="p-3.5 rounded-2xl bg-[#262626] border border-white/10">
+              <span className="text-white/60 block font-medium">Estimated Kitchen Prep</span>
+              <span className="font-bold text-[#F59E0B] text-sm mt-0.5 block">10-15 Minutes</span>
+              <span className="text-white/50">Live kitchen active</span>
             </div>
           </div>
 
           {confirmedOrder.specialInstructions && (
-            <div className="p-3 rounded-xl bg-[#FEF3EB] border border-[#FCDDC7] text-xs text-[#DE752C]">
+            <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/40 text-xs text-amber-300">
               <strong>Special Instructions:</strong> {confirmedOrder.specialInstructions}
             </div>
           )}
 
           {/* Items Table */}
           <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#78716C]">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white/50">
               Dishes Ordered ({confirmedOrder.items?.length || 0})
             </h4>
-            <div className="divide-y divide-[#F4EFE6]">
+            <div className="divide-y divide-white/10">
               {confirmedOrder.items?.map((item) => (
                 <div key={item.id} className="py-3 flex items-center justify-between gap-4 text-xs sm:text-sm">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
                       src={item.imageUrl || fallbackImg}
                       alt={item.itemName}
-                      className="w-12 h-12 rounded-xl object-cover bg-[#F4EFE6] shrink-0"
+                      className="w-12 h-12 rounded-xl object-cover bg-[#262626] shrink-0 border border-white/10"
                     />
                     <div className="min-w-0">
-                      <p className="font-bold text-[#292524] truncate">{item.itemName}</p>
-                      <p className="text-xs text-[#78716C]">
+                      <p className="font-['Caveat',cursive] text-xl font-bold text-white truncate tracking-wide">{item.itemName}</p>
+                      <p className="text-xs text-white/50">
                         {item.quantity} × ₹{item.unitPrice}
                       </p>
                     </div>
                   </div>
-                  <span className="font-extrabold text-[#197A50] shrink-0">
+                  <span className="font-extrabold text-[#F59E0B] shrink-0 text-base">
                     ₹{item.subtotal.toFixed(2)}
                   </span>
                 </div>
@@ -303,14 +301,14 @@ export const CheckoutPage = () => {
           </div>
 
           {/* Backend Authoritative Total */}
-          <div className="pt-4 border-t border-[#EDE8DC] flex justify-between items-baseline">
+          <div className="pt-4 border-t border-white/10 flex justify-between items-baseline">
             <div>
-              <span className="text-base font-extrabold text-[#292524] block">
+              <span className="text-base font-extrabold text-white block">
                 Total Amount Paid / Charged
               </span>
-              <span className="text-xs text-[#78716C]">Calculated and verified by backend</span>
+              <span className="text-xs text-white/50">Calculated and verified by backend</span>
             </div>
-            <span className="text-2xl font-black text-[#197A50]">
+            <span className="text-2xl font-black text-[#F59E0B]">
               ₹{confirmedOrder.totalAmount.toFixed(2)}
             </span>
           </div>
@@ -320,16 +318,16 @@ export const CheckoutPage = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             to="/orders"
-            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#197A50] hover:bg-[#125B3C] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
           >
             <span>Track in My Orders</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/menu"
-            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#FAF8F2] hover:bg-[#EDE8DC] text-[#292524] border border-[#EDE8DC] font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#262626] hover:bg-white/10 text-white border border-white/10 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Utensils className="w-4 h-4" />
+            <Utensils className="w-4 h-4 text-[#F59E0B]" />
             <span>Order More Dishes</span>
           </Link>
         </div>
@@ -342,26 +340,26 @@ export const CheckoutPage = () => {
   // ----------------------------------------------------
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen py-16 max-w-xl mx-auto px-4 text-center">
-        <div className="bg-white rounded-3xl p-10 border border-[#EDE8DC] shadow-xs">
-          <div className="w-20 h-20 rounded-full bg-[#EBF5F0] text-[#197A50] flex items-center justify-center mx-auto mb-4 shadow-2xs">
+      <div className="min-h-screen bg-[#121212] text-[#F3F4F6] py-16 max-w-xl mx-auto px-4 text-center">
+        <div className="bg-[#1A1A1A] rounded-3xl p-10 border border-white/10 shadow-xl">
+          <div className="w-20 h-20 rounded-full bg-[#262626] text-[#F59E0B] flex items-center justify-center mx-auto mb-4 shadow-2xs">
             <ShoppingBag className="w-9 h-9 stroke-[1.6]" />
           </div>
-          <h2 className="text-2xl font-bold text-[#292524]">No items in your tray</h2>
-          <p className="text-xs sm:text-sm text-[#78716C] mt-2 max-w-sm mx-auto leading-relaxed">
+          <h2 className="text-2xl font-bold text-white">No items in your tray</h2>
+          <p className="text-xs sm:text-sm text-white/60 mt-2 max-w-sm mx-auto leading-relaxed">
             Please add dishes from our fresh canteen menu before proceeding with checkout.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to="/menu"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#197A50] hover:bg-[#125B3C] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Utensils className="w-4 h-4" />
               <span>Explore Canteen Menu</span>
             </Link>
             <Link
               to="/"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#FAF8F2] hover:bg-[#EDE8DC] text-[#292524] border border-[#EDE8DC] font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#262626] hover:bg-white/10 text-white border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Return to Home</span>
@@ -376,29 +374,29 @@ export const CheckoutPage = () => {
   // VIEW 3: ACTIVE CHECKOUT FORM CONNECTED TO REAL API
   // ----------------------------------------------------
   return (
-    <div className="min-h-screen py-8 sm:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#121212] text-[#F3F4F6] py-8 sm:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-xs text-[#78716C] mb-6">
-        <Link to="/" className="hover:text-[#197A50] transition-colors">
+      <nav className="flex items-center gap-2 text-xs text-white/50 mb-6">
+        <Link to="/" className="hover:text-[#F59E0B] transition-colors">
           Home
         </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-[#A8A29E]" />
-        <Link to="/cart" className="hover:text-[#197A50] transition-colors">
+        <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+        <Link to="/cart" className="hover:text-[#F59E0B] transition-colors">
           Cart
         </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-[#A8A29E]" />
-        <span className="font-semibold text-[#292524]">Checkout & Confirm</span>
+        <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+        <span className="font-semibold text-white">Checkout & Confirm</span>
       </nav>
 
       {/* Header */}
-      <div className="pb-6 border-b border-[#EDE8DC] mb-8">
-        <span className="text-xs font-bold text-[#197A50] uppercase tracking-wider bg-[#EBF5F0] px-3.5 py-1 rounded-full">
+      <div className="pb-6 border-b border-white/10 mb-8">
+        <span className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider bg-[#F59E0B]/15 px-3.5 py-1 rounded-full border border-[#F59E0B]/30">
           Live Kitchen Ordering
         </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292524] tracking-tight mt-2.5">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-2.5">
           Complete Your Canteen Order
         </h1>
-        <p className="text-xs sm:text-sm text-[#78716C] mt-1">
+        <p className="text-xs sm:text-sm text-white/60 mt-1">
           Provide your employee details and pickup station to dispatch your order directly to the live kitchen.
         </p>
       </div>
@@ -409,20 +407,20 @@ export const CheckoutPage = () => {
         <div className="lg:col-span-7 space-y-6">
           {/* Validation Error Banner */}
           {errorMessage && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="bg-red-950/40 border border-red-800/50 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
               <div className="text-xs">
-                <p className="font-bold text-red-800">Checkout Error</p>
-                <p className="text-red-700 mt-0.5 leading-relaxed">{errorMessage}</p>
+                <p className="font-bold text-red-400">Checkout Error</p>
+                <p className="text-red-300 mt-0.5 leading-relaxed">{errorMessage}</p>
               </div>
             </div>
           )}
 
           {/* 1. Customer & Employee Information */}
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs p-6 sm:p-7 space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-[#F4EFE6]">
-              <User className="w-5 h-5 text-[#197A50]" />
-              <h3 className="font-bold text-base text-[#292524]">
+          <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xl p-6 sm:p-7 space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+              <User className="w-5 h-5 text-[#F59E0B]" />
+              <h3 className="font-bold text-base text-white">
                 1. Customer & Employee Details
               </h3>
             </div>
@@ -430,21 +428,21 @@ export const CheckoutPage = () => {
             <div className="space-y-4 pt-1">
               {/* Authenticated / Guest Status Banner */}
               {isAuthenticated && currentUser ? (
-                <div className="bg-[#EBF5F0] border border-[#D5E6DC] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs text-[#197A50]">
+                <div className="bg-[#262626] border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs text-white/80">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <ShieldCheck className="w-4 h-4 text-[#197A50] shrink-0" />
+                    <ShieldCheck className="w-4 h-4 text-[#F59E0B] shrink-0" />
                     <span className="truncate">
-                      Ordering as <strong>{currentUser.name}</strong> ({currentUser.email})
+                      Ordering as <strong className="text-white">{currentUser.name}</strong> ({currentUser.email})
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold bg-white text-[#197A50] px-2.5 py-0.5 rounded-full border border-[#D5E6DC] shrink-0">
+                  <span className="text-[10px] font-bold bg-[#F59E0B]/15 text-[#F59E0B] px-2.5 py-0.5 rounded-full border border-[#F59E0B]/30 shrink-0">
                     Account Linked
                   </span>
                 </div>
               ) : (
-                <div className="bg-[#FEF3EB] border border-[#FCDDC7] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs text-[#DE752C]">
+                <div className="bg-[#262626] border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs text-white/80">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Sparkles className="w-4 h-4 text-[#F28C45] shrink-0" />
+                    <Sparkles className="w-4 h-4 text-[#F59E0B] shrink-0" />
                     <span className="text-[11px] sm:text-xs">
                       Sign in to link this order to your account and track tokens live.
                     </span>
@@ -452,7 +450,7 @@ export const CheckoutPage = () => {
                   <button
                     type="button"
                     onClick={() => openAuthModal('login')}
-                    className="font-bold underline text-[#F28C45] hover:text-[#DE752C] cursor-pointer shrink-0"
+                    className="font-bold underline text-[#F59E0B] hover:text-[#D97706] cursor-pointer shrink-0"
                   >
                     Sign In
                   </button>
@@ -461,8 +459,8 @@ export const CheckoutPage = () => {
 
               {/* Customer Name (Required by backend) */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                  Full Name <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-white mb-1.5">
+                  Full Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -470,15 +468,15 @@ export const CheckoutPage = () => {
                   value={formData.customerName}
                   onChange={handleInputChange}
                   placeholder="Enter employee full name"
-                  className={`w-full text-xs sm:text-sm bg-[#FAF8F2] border rounded-2xl px-4 py-3 text-[#292524] focus:outline-none transition-colors ${
+                  className={`w-full text-xs sm:text-sm bg-[#121212] border rounded-2xl px-4 py-3 text-white focus:outline-none transition-colors placeholder:text-white/30 ${
                     fieldErrors.customerName
-                      ? 'border-red-400 focus:ring-1 focus:ring-red-400 bg-red-50/20'
-                      : 'border-[#EDE8DC] focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]'
+                      ? 'border-red-500 focus:ring-1 focus:ring-red-500'
+                      : 'border-white/10 focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]'
                   }`}
                   disabled={isSubmitting}
                 />
                 {fieldErrors.customerName && (
-                  <p className="text-[11px] text-red-600 font-medium mt-1">
+                  <p className="text-[11px] text-red-400 font-medium mt-1">
                     {fieldErrors.customerName}
                   </p>
                 )}
@@ -487,7 +485,7 @@ export const CheckoutPage = () => {
               {/* Employee ID & Email (2-Column) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#292524] mb-1.5">
+                  <label className="block text-xs font-semibold text-white/80 mb-1.5">
                     Corporate Employee ID
                   </label>
                   <input
@@ -496,12 +494,12 @@ export const CheckoutPage = () => {
                     value={formData.employeeId}
                     onChange={handleInputChange}
                     placeholder="e.g. OB-7821"
-                    className="w-full text-xs sm:text-sm bg-[#FAF8F2] border border-[#EDE8DC] rounded-2xl px-4 py-3 text-[#292524] focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full text-xs sm:text-sm bg-[#121212] border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] placeholder:text-white/30"
                     disabled={isSubmitting}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#292524] mb-1.5">
+                  <label className="block text-xs font-semibold text-white/80 mb-1.5">
                     Work Email
                   </label>
                   <input
@@ -510,7 +508,7 @@ export const CheckoutPage = () => {
                     value={formData.customerEmail}
                     onChange={handleInputChange}
                     placeholder="name@company.com"
-                    className="w-full text-xs sm:text-sm bg-[#FAF8F2] border border-[#EDE8DC] rounded-2xl px-4 py-3 text-[#292524] focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full text-xs sm:text-sm bg-[#121212] border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] placeholder:text-white/30"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -519,10 +517,10 @@ export const CheckoutPage = () => {
           </div>
 
           {/* 2. Pickup & Fulfillment Station */}
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs p-6 sm:p-7 space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-[#F4EFE6]">
-              <MapPin className="w-5 h-5 text-[#197A50]" />
-              <h3 className="font-bold text-base text-[#292524]">
+          <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xl p-6 sm:p-7 space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+              <MapPin className="w-5 h-5 text-[#F59E0B]" />
+              <h3 className="font-bold text-base text-white">
                 2. Fulfillment Station
               </h3>
             </div>
@@ -534,18 +532,18 @@ export const CheckoutPage = () => {
                 onClick={() => handleDeliveryTypeChange('CANTEEN_PICKUP')}
                 className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                   formData.deliveryType === 'CANTEEN_PICKUP'
-                    ? 'border-[#197A50] bg-[#EBF5F0] ring-1 ring-[#197A50]'
-                    : 'border-[#EDE8DC] bg-[#FAF8F2] hover:bg-white'
+                    ? 'border-[#F59E0B] bg-[#F59E0B]/15 ring-1 ring-[#F59E0B]'
+                    : 'border-white/10 bg-[#121212] hover:bg-white/5'
                 }`}
                 disabled={isSubmitting}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm text-[#292524]">
+                  <span className="font-bold text-xs sm:text-sm text-white">
                     Counter Pickup
                   </span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#197A50]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span>
                 </div>
-                <p className="text-[11px] text-[#78716C] mt-1">
+                <p className="text-[11px] text-white/60 mt-1">
                   Floor 3 Live Kitchen Express Counter
                 </p>
               </button>
@@ -555,24 +553,24 @@ export const CheckoutPage = () => {
                 onClick={() => handleDeliveryTypeChange('DESK_DELIVERY')}
                 className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                   formData.deliveryType === 'DESK_DELIVERY'
-                    ? 'border-[#197A50] bg-[#EBF5F0] ring-1 ring-[#197A50]'
-                    : 'border-[#EDE8DC] bg-[#FAF8F2] hover:bg-white'
+                    ? 'border-[#F59E0B] bg-[#F59E0B]/15 ring-1 ring-[#F59E0B]'
+                    : 'border-white/10 bg-[#121212] hover:bg-white/5'
                 }`}
                 disabled={isSubmitting}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm text-[#292524]">
+                  <span className="font-bold text-xs sm:text-sm text-white">
                     Desk Delivery
                   </span>
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${
                       formData.deliveryType === 'DESK_DELIVERY'
-                        ? 'bg-[#197A50]'
-                        : 'border border-[#A8A29E]'
+                        ? 'bg-[#F59E0B]'
+                        : 'border border-white/40'
                     }`}
                   ></span>
                 </div>
-                <p className="text-[11px] text-[#78716C] mt-1">
+                <p className="text-[11px] text-white/60 mt-1">
                   Delivered straight to your office desk
                 </p>
               </button>
@@ -580,7 +578,7 @@ export const CheckoutPage = () => {
 
             {/* Delivery Location Field */}
             <div>
-              <label className="block text-xs font-semibold text-[#292524] mb-1.5">
+              <label className="block text-xs font-semibold text-white/80 mb-1.5">
                 Exact Pickup / Desk Location
               </label>
               <input
@@ -589,22 +587,22 @@ export const CheckoutPage = () => {
                 value={formData.deliveryLocation}
                 onChange={handleInputChange}
                 placeholder="e.g. Express Counter 2 • Floor 3 or Tower A • Floor 4 • Desk 412"
-                className="w-full text-xs sm:text-sm bg-[#FAF8F2] border border-[#EDE8DC] rounded-2xl px-4 py-3 text-[#292524] focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                className="w-full text-xs sm:text-sm bg-[#121212] border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] placeholder:text-white/30"
                 disabled={isSubmitting}
               />
             </div>
           </div>
 
           {/* 3. Special Instructions */}
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs p-6 sm:p-7 space-y-3">
-            <div className="flex items-center gap-2 pb-2 border-b border-[#F4EFE6]">
-              <FileText className="w-5 h-5 text-[#197A50]" />
-              <h3 className="font-bold text-base text-[#292524]">
+          <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xl p-6 sm:p-7 space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+              <FileText className="w-5 h-5 text-[#F59E0B]" />
+              <h3 className="font-bold text-base text-white">
                 3. Kitchen Instructions
               </h3>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#78716C] mb-1.5">
+              <label className="block text-xs font-medium text-white/60 mb-1.5">
                 Allergy alerts or cooking preferences for the canteen chef
               </label>
               <textarea
@@ -613,7 +611,7 @@ export const CheckoutPage = () => {
                 onChange={handleInputChange}
                 rows={2}
                 placeholder="E.g., Less spicy, extra coconut chutney, pack sambar separately..."
-                className="w-full text-xs sm:text-sm bg-[#FAF8F2] border border-[#EDE8DC] rounded-2xl px-4 py-3 text-[#292524] focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50] resize-none"
+                className="w-full text-xs sm:text-sm bg-[#121212] border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] resize-none placeholder:text-white/30"
                 disabled={isSubmitting}
               />
             </div>
@@ -622,32 +620,32 @@ export const CheckoutPage = () => {
 
         {/* Right Column: Order Items Review & Real Submission CTA */}
         <div className="lg:col-span-5 sticky top-24 space-y-4">
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs p-6 sm:p-7 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F4EFE6]">
-              <h3 className="font-extrabold text-base text-[#292524]">Review Your Food Tray</h3>
-              <span className="text-xs font-bold text-[#197A50] bg-[#EBF5F0] px-2.5 py-0.5 rounded-full">
+          <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xl p-6 sm:p-7 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h3 className="font-extrabold text-base text-white">Review Your Food Tray</h3>
+              <span className="text-xs font-bold text-[#F59E0B] bg-[#F59E0B]/15 px-2.5 py-0.5 rounded-full border border-[#F59E0B]/30">
                 {cartItems.length} {cartItems.length === 1 ? 'Dish' : 'Dishes'}
               </span>
             </div>
 
             {/* Item Line Review */}
-            <div className="divide-y divide-[#F4EFE6] max-h-64 overflow-y-auto pr-1">
+            <div className="divide-y divide-white/10 max-h-64 overflow-y-auto pr-1">
               {cartItems.map((item) => (
                 <div key={item.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <img
                       src={item.image || item.imageUrl || fallbackImg}
                       alt={item.name}
-                      className="w-10 h-10 rounded-xl object-cover bg-[#F4EFE6] shrink-0"
+                      className="w-10 h-10 rounded-xl object-cover bg-[#262626] border border-white/10 shrink-0"
                     />
                     <div className="min-w-0">
-                      <p className="font-bold text-[#292524] truncate">{item.name}</p>
-                      <p className="text-[11px] text-[#78716C]">
+                      <p className="font-['Caveat',cursive] text-lg font-bold text-white truncate tracking-wide">{item.name}</p>
+                      <p className="text-[11px] text-white/50">
                         Qty: {item.quantity} (ID: {item.id})
                       </p>
                     </div>
                   </div>
-                  <span className="font-extrabold text-[#197A50] shrink-0">
+                  <span className="font-extrabold text-[#F59E0B] shrink-0 text-sm">
                     ₹{(item.price * item.quantity).toFixed(2)}
                   </span>
                 </div>
@@ -655,19 +653,19 @@ export const CheckoutPage = () => {
             </div>
 
             {/* Backend Verification Notice */}
-            <div className="bg-[#FAF8F2] border border-[#EDE8DC] rounded-2xl p-3.5 text-[11px] text-[#78716C] leading-relaxed">
-              <strong className="text-[#292524]">Authoritative Pricing:</strong> Only requested dish IDs and quantities are transmitted. The Spring Boot backend retrieves real menu prices from MySQL and computes the authoritative total.
+            <div className="bg-[#262626] border border-white/10 rounded-2xl p-3.5 text-[11px] text-white/60 leading-relaxed">
+              <strong className="text-white">Authoritative Pricing:</strong> Only requested dish IDs and quantities are transmitted. The Spring Boot backend retrieves real menu prices from MySQL and computes the authoritative total.
             </div>
 
             {/* Estimated Total */}
-            <div className="pt-2 border-t border-[#EDE8DC] flex justify-between items-baseline">
+            <div className="pt-2 border-t border-white/10 flex justify-between items-baseline">
               <div>
-                <span className="font-extrabold text-sm sm:text-base text-[#292524] block">
+                <span className="font-extrabold text-sm sm:text-base text-white block">
                   Total Bill
                 </span>
-                <span className="text-[11px] text-[#78716C]">No hidden charges or extra fees</span>
+                <span className="text-[11px] text-white/50">No hidden charges or extra fees</span>
               </div>
-              <span className="text-2xl font-black text-[#197A50]">
+              <span className="text-2xl font-black text-[#F59E0B]">
                 ₹{cartItems.reduce((acc, i) => acc + (Number(i.price) || 0) * (i.quantity || 1), 0).toFixed(2)}
               </span>
             </div>
@@ -676,10 +674,10 @@ export const CheckoutPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-4 px-5 rounded-2xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
+              className={`w-full py-4 px-5 rounded-2xl font-black text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
                 isSubmitting
-                  ? 'bg-[#197A50]/70 text-white cursor-not-allowed'
-                  : 'bg-[#197A50] hover:bg-[#125B3C] text-white hover:shadow-lg cursor-pointer active:scale-98'
+                  ? 'bg-[#F59E0B]/70 text-[#121212] cursor-not-allowed'
+                  : 'bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] hover:shadow-lg cursor-pointer active:scale-98'
               }`}
             >
               {isSubmitting ? (

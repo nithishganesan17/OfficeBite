@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Button Test: Curry Leaves & Chicken</title>
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(30, 30, 30, 0.9);
+      padding: 12px 24px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #1A1A1A;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      padding: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .btn:hover {
+      transform: scale(1.08);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .btn.active-veg {
+      border-color: #22C55E;
+      background: rgba(34, 197, 94, 0.15);
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.45);
+    }
+    .btn.active-nonveg {
+      border-color: #EF4444;
+      background: rgba(239, 68, 68, 0.15);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+    }
+    .btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+  </style>
+</head>
+<body>
+  <h2>Veg (Curry Leaves) and Non-Veg (Chicken) Selection Buttons</h2>
+  
+  <div class="row">
+    <span>Default State:</span>
+    <button class="btn" title="Filter Vegetarian (Curry Leaves)">
+      <img src="curry_leaves.svg" alt="Veg (Curry Leaves)" />
+    </button>
+    <button class="btn" title="Filter Non-Vegetarian (Chicken)">
+      <img src="chicken_leg.svg" alt="Non-Veg (Chicken)" />
+    </button>
+  </div>
+
+  <div class="row">
+    <span>Veg Selected:</span>
+    <button class="btn active-veg" title="Filter Vegetarian">
+      <img src="curry_leaves.svg" alt="Veg (Curry Leaves)" />
+    </button>
+    <button class="btn" style="opacity: 0.5;" title="Filter Non-Vegetarian">
+      <img src="chicken_leg.svg" alt="Non-Veg (Chicken)" />
+    </button>
+  </div>
+
+  <div class="row">
+    <span>Non-Veg Selected:</span>
+    <button class="btn" style="opacity: 0.5;" title="Filter Vegetarian">
+      <img src="curry_leaves.svg" alt="Veg (Curry Leaves)" />
+    </button>
+    <button class="btn active-nonveg" title="Filter Non-Vegetarian">
+      <img src="chicken_leg.svg" alt="Non-Veg (Chicken)" />
+    </button>
+  </div>
+</body>
+</html>
+

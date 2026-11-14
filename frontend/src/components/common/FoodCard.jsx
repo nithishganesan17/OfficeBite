@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Star, Clock, Plus, Minus, Trash2, Sparkles, ChefHat } from 'lucide-react';
+import { Star, Clock, Plus, Minus, Trash2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 /**
- * Animated FoodCard with 3D tilt, hover lift, image zoom, and Kanigiri palette.
+ * Animated FoodCard with dark theme and bold stylish handwriting dish names.
+ * Features:
+ * - Dish name in bold stylish handwriting (Caveat font)
+ * - Dark carbon card surface (#1A1A1A) with soft amber accents (#F59E0B)
  */
 export const FoodCard = ({ dish }) => {
   const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
@@ -18,41 +21,37 @@ export const FoodCard = ({ dish }) => {
 
   return (
     <div className="perspective-container">
-      <div className="tilt-card group bg-white rounded-3xl border border-[#EAE3D6] overflow-hidden shadow-[0_4px_20px_rgba(38,28,20,0.04)] hover:shadow-[0_20px_35px_rgba(61,90,43,0.12)] hover:border-[#D4E0C9] transition-all duration-300 flex flex-col h-full">
+      <div className="tilt-card group bg-[#1A1A1A] rounded-3xl border border-white/10 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.9)] hover:border-[#F59E0B]/50 transition-all duration-300 flex flex-col h-full">
         {/* Food Image Container */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F2ECE0]">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#141414]">
           <img
             src={imgError ? fallbackImg : dish.image}
             alt={dish.alt || dish.name}
             onError={() => setImgError(true)}
             loading="lazy"
-            className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
+            className={`w-full h-full ${
+              dish.image?.includes('.png') ? 'object-contain p-2.5' : 'object-cover'
+            } object-center group-hover:scale-108 transition-transform duration-700 ease-out`}
           />
 
-          {/* Luxury Gradient Overlay for image readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25 pointer-events-none" />
+          {/* Gradient Overlay for image readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30 pointer-events-none" />
 
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-            {/* Pure Veg Indicator */}
-            <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl shadow-xs border border-white/60">
-              <span className="w-3 h-3 rounded-xs border-2 border-[#3D5A2B] flex items-center justify-center p-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#3D5A2B]"></span>
+            {/* Pure Veg / Non-Veg Indicator */}
+            <div className="flex items-center gap-1.5 bg-[#121212]/90 backdrop-blur-md px-2.5 py-1 rounded-xl shadow-xs border border-white/10">
+              <span className={`w-3 h-3 rounded-xs border-2 ${dish.isVeg ? 'border-green-500' : 'border-red-500'} flex items-center justify-center p-0.5`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${dish.isVeg ? 'bg-green-500' : 'bg-red-500'}`}></span>
               </span>
-              <span className="text-[10px] font-black tracking-wider text-[#3D5A2B] uppercase">
-                Veg
+              <span className={`text-[10px] font-black tracking-wider ${dish.isVeg ? 'text-green-400' : 'text-red-400'} uppercase`}>
+                {dish.isVeg ? 'Veg' : 'Non-Veg'}
               </span>
             </div>
 
             {/* Special / Bestseller Badge */}
             {dish.badge && (
-              <span
-                className={`text-[11px] font-black px-3 py-1 rounded-xl shadow-xs tracking-wide ${
-                  dish.badge === 'Bestseller' || dish.badge === 'Chef Signature'
-                    ? 'bg-gradient-to-r from-[#D48B18] to-[#E5A93C] text-white'
-                    : 'bg-[#3D5A2B] text-white'
-                }`}
-              >
+              <span className="text-[11px] font-black px-3 py-1 rounded-xl shadow-xs tracking-wide bg-[#F59E0B] text-[#121212]">
                 {dish.badge}
               </span>
             )}
@@ -60,37 +59,38 @@ export const FoodCard = ({ dish }) => {
 
           {/* Bottom stats inside image */}
           <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-xs font-medium pointer-events-none drop-shadow-md">
-            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10">
-              <Star className="w-3.5 h-3.5 fill-[#E5A93C] text-[#E5A93C]" />
+            <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span className="font-extrabold">{dish.rating}</span>
-              <span className="text-white/80 text-[10px]">({dish.reviewsCount || 120})</span>
+              <span className="text-white/70 text-[10px]">({dish.reviewsCount || 120})</span>
             </div>
 
-            <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 text-[11px]">
-              <Clock className="w-3 h-3 text-[#E5A93C]" />
+            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 text-[11px]">
+              <Clock className="w-3 h-3 text-amber-300" />
               <span>{dish.prepTime || '12 mins'}</span>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="p-5 flex-1 flex flex-col justify-between bg-white">
+        <div className="p-5 flex-1 flex flex-col justify-between bg-[#1A1A1A]">
           <div>
-            <h3 className="font-extrabold text-base text-[#261C14] group-hover:text-[#3D5A2B] transition-colors leading-snug line-clamp-1">
+            {/* DISH NAME IN BOLD STYLISH HANDWRITING (Caveat font) */}
+            <h3 className="font-['Caveat',cursive] text-2xl sm:text-[26px] font-bold text-white group-hover:text-[#F59E0B] transition-colors leading-snug line-clamp-1 tracking-wide">
               {dish.name}
             </h3>
-            <p className="text-xs text-[#73675C] mt-1.5 leading-relaxed line-clamp-2">
+            <p className="text-xs text-white/60 mt-1 leading-relaxed line-clamp-2">
               {dish.description}
             </p>
           </div>
 
           {/* Price & Action Button */}
-          <div className="mt-4 pt-3.5 border-t border-[#EAE3D6] flex items-center justify-between gap-3">
+          <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between gap-3">
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#73675C] block leading-none">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-white/40 block leading-none">
                 Price
               </span>
-              <span className="text-xl font-black text-[#261C14] tracking-tight">
+              <span className="text-xl font-black text-[#F59E0B] tracking-tight">
                 ₹{dish.price}
               </span>
             </div>
@@ -98,13 +98,13 @@ export const FoodCard = ({ dish }) => {
             {quantity === 0 ? (
               <button
                 onClick={() => addToCart(dish)}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#EEF3E8] hover:bg-[#3D5A2B] text-[#3D5A2B] hover:text-white font-bold text-xs transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-md active:scale-95 border border-[#D4E0C9]/60 hover:border-transparent"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg active:scale-95"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Add to Plate</span>
               </button>
             ) : (
-              <div className="inline-flex items-center bg-[#3D5A2B] text-white rounded-2xl px-2 py-1 shadow-md shadow-[#3D5A2B]/20">
+              <div className="inline-flex items-center bg-[#F59E0B] text-[#121212] rounded-2xl px-2 py-1 shadow-md font-black">
                 <button
                   onClick={() => {
                     if (quantity > 1) {
@@ -113,18 +113,18 @@ export const FoodCard = ({ dish }) => {
                       removeFromCart(dish.id);
                     }
                   }}
-                  className="w-7 h-7 flex items-center justify-center rounded-xl hover:bg-black/20 active:scale-90 transition-all cursor-pointer"
+                  className="w-7 h-7 flex items-center justify-center rounded-xl hover:bg-black/15 active:scale-90 transition-all cursor-pointer"
                   title={quantity === 1 ? 'Remove from cart' : 'Decrease quantity'}
                 >
-                  {quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+                  {quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5 stroke-[2.5]" />}
                 </button>
                 <span className="w-7 text-center font-black text-xs">{quantity}</span>
                 <button
                   onClick={() => updateQuantity(dish.id, quantity + 1)}
-                  className="w-7 h-7 flex items-center justify-center rounded-xl hover:bg-black/20 active:scale-90 transition-all cursor-pointer"
+                  className="w-7 h-7 flex items-center justify-center rounded-xl hover:bg-black/15 active:scale-90 transition-all cursor-pointer"
                   title="Increase quantity"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </div>
             )}

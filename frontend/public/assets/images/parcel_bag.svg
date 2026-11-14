@@ -1,0 +1,48 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="bagShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E2A662"/>
+      <stop offset="100%" stop-color="#B8762D"/>
+    </linearGradient>
+    <linearGradient id="bagFold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A5641D"/>
+      <stop offset="100%" stop-color="#C5853D"/>
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#bagShadow)">
+    <!-- Twisted Paper Handles -->
+    <path d="M48 38 C48 18 72 18 72 38" stroke="#78410E" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M50 38 C50 20 70 20 70 38" stroke="#D99B52" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+    <!-- Main Bag Body -->
+    <polygon points="30,38 90,38 96,104 24,104" fill="url(#bagGrad)" stroke="#8F5419" stroke-width="1.5" stroke-linejoin="round"/>
+    
+    <!-- Top Serrated Rim / Fold -->
+    <polygon points="29,38 91,38 90,44 30,44" fill="url(#bagFold)"/>
+
+    <!-- Side Gusset Crease -->
+    <line x1="38" y1="38" x2="35" y2="104" stroke="#8F5419" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.6"/>
+    
+    <!-- Bottom Yellow Brand Accent Strip -->
+    <path d="M25 96 Q60 88 95 96 L96 104 L24 104 Z" fill="#F59E0B" opacity="0.9"/>
+
+    <!-- OfficeBite Chef Hat Brand Logo -->
+    <g transform="translate(48, 56) scale(0.48)">
+      <path d="M25 14 C20 7, 12 9, 10 17 C5 17, 2 23, 5 29 C2 34, 6 40, 14 40 L36 40 C44 40, 48 34, 45 29 C48 23, 45 17, 40 17 C38 9, 30 7, 25 14 Z" fill="#121212" opacity="0.85"/>
+      <rect x="12" y="42" width="26" height="4" rx="2" fill="#121212" opacity="0.85"/>
+    </g>
+
+    <!-- Hot Food Badge -->
+    <circle cx="78" cy="52" r="8" fill="#EF4444" opacity="0.9"/>
+    <path d="M78 48 Q80 51 78 54 Q76 56 78 57" stroke="#FFF" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Steam rising from paper bag -->
+  <path d="M54 18 Q50 10 55 4" stroke="#F59E0B" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.8"/>
+  <path d="M66 16 Q70 8 65 2" stroke="#F59E0B" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.75"/>
+</svg>
+

@@ -1,15 +1,64 @@
 export const CATEGORIES = [
-  { id: 'all', name: 'All Dishes', icon: 'UtensilsCrossed' },
-  { id: 'indian-meals', name: 'Indian Meals', icon: 'Flame' },
-  { id: 'dosa', name: 'Dosa & Crepes', icon: 'Sparkles' },
-  { id: 'idli', name: 'Idli Specials', icon: 'Sun' },
-  { id: 'biryani', name: 'Dum Biryani', icon: 'Crown' },
-  { id: 'rice-bowls', name: 'Rice Bowls', icon: 'Soup' },
-  { id: 'sandwiches', name: 'Sandwiches', icon: 'Layers' },
-  { id: 'snacks', name: 'Crispy Snacks', icon: 'Cookie' },
-  { id: 'coffee', name: 'Filter Coffee & Tea', icon: 'Coffee' },
-  { id: 'juice', name: 'Fresh Juices', icon: 'Citrus' },
-  { id: 'desserts', name: 'Desserts', icon: 'IceCream' },
+  {
+    id: 'all',
+    name: 'All Dishes',
+    icon: 'UtensilsCrossed',
+    image: '/assets/images/showcase_thali_royal.png',
+  },
+  {
+    id: 'indian-meals',
+    name: 'Indian Meals',
+    icon: 'Flame',
+    image: '/assets/images/showcase_thali_deluxe.png',
+  },
+  {
+    id: 'dosa',
+    name: 'Dosa & Crepes',
+    icon: 'Sparkles',
+    image: '/assets/images/showcase_masala_dosa.png',
+  },
+  {
+    id: 'idli',
+    name: 'Idli Specials',
+    icon: 'Sun',
+    image: '/assets/images/showcase_steamed_idli.png',
+  },
+  {
+    id: 'biryani',
+    name: 'Dum Biryani',
+    icon: 'Crown',
+    image: '/assets/images/biryani_bowl_nobg.png',
+  },
+  {
+    id: 'rice-bowls',
+    name: 'Rice Bowls',
+    icon: 'Soup',
+    image: '/assets/images/jeera_rice_bowl.png',
+  },
+  {
+    id: 'sandwiches',
+    name: 'Sandwiches',
+    icon: 'Layers',
+    image: '/assets/images/club_sandwich.png',
+  },
+  {
+    id: 'snacks',
+    name: 'Snacks',
+    icon: 'Cookie',
+    image: '/assets/images/samosa_platter.png',
+  },
+  {
+    id: 'coffee',
+    name: 'Filter Coffee & Tea',
+    icon: 'Coffee',
+    image: '/assets/images/filter_coffee.png',
+  },
+  {
+    id: 'juice',
+    name: 'Fresh Juices',
+    icon: 'Citrus',
+    image: '/assets/images/fresh_juice_varieties.png',
+  },
 ];
 
 export const MENU_ITEMS = [
@@ -19,7 +68,7 @@ export const MENU_ITEMS = [
     name: 'Deluxe North Indian Thali',
     category: 'indian-meals',
     categoryName: 'Indian Meals',
-    description: 'Slow-cooked Paneer Butter Masala, Dal Makhani, 2 Butter Rotis, fragrant Jeera Rice, Gulab Jamun, Papad & Mint Salad.',
+    description: 'Authentic royal spread: 3 hot whole-wheat rotis, steamed basmati rice, aromatic dal fry, homestyle spiced sabzi, chole masala, fresh cucumber raita & traditional pickles.',
     price: 180,
     rating: 4.9,
     reviewsCount: 342,
@@ -29,8 +78,8 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Bestseller',
-    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
-    alt: 'Authentic Indian thali meal platter with curries, roti and rice'
+    image: '/assets/images/deluxe_north_indian_thali.png',
+    alt: 'Deluxe North Indian thali meal platter with rotis, rice, dal, curries, and raita'
   },
   {
     id: 'dish-2',
@@ -47,8 +96,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Healthy Choice',
-    image: 'https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?auto=format&fit=crop&w=800&q=80',
-    alt: 'South Indian thali meal with rice, sambar, and traditional side curries'
+    image: '/assets/images/executive_south_indian_thali.png',
+    alt: 'Executive South Indian thali meal platter with rice, sambar, and traditional side curries'
   },
   {
     id: 'dish-3',
@@ -65,7 +114,7 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'High Protein',
-    image: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/showcase_paneer_tikka.png',
     alt: 'Paneer tikka skewers with aromatic spiced rice'
   },
 
@@ -85,7 +134,7 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Crowd Favorite',
-    image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/mysore_masala_dosa.png',
     alt: 'Crisp Mysore masala dosa served with fresh coconut chutneys and sambar'
   },
   {
@@ -103,8 +152,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Desi Ghee',
-    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80',
-    alt: 'Thin paper roast dosa served hot with coconut dip'
+    image: '/assets/images/ghee_roast_paper_dosa.png',
+    alt: 'Crisp golden ghee roast paper dosa with melting butter, served with sambar and traditional chutneys'
   },
   {
     id: 'dish-6',
@@ -121,8 +170,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Chef Special',
-    image: 'https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80',
-    alt: 'Freshly made paneer dosa with side dips'
+    image: '/assets/images/paneer_bhurji_dosa.png',
+    alt: 'Freshly made paneer bhurji dosa with three chutneys on black plate'
   },
 
   // --- Idli ---
@@ -131,7 +180,7 @@ export const MENU_ITEMS = [
     name: 'Ghee Podi Button Idlis (14 pcs)',
     category: 'idli',
     categoryName: 'Idli Specials',
-    description: 'Bite-sized pillow-soft steamed idlis tossed generously in hot melted ghee and roasted spicy lentil gunpowder.',
+    description: 'Bite-sized pillow-soft steamed idlis tossed generously in hot melted ghee and roasted spicy lentil gunpowder, served with coconut chutney & sambar.',
     price: 95,
     rating: 4.9,
     reviewsCount: 310,
@@ -141,8 +190,8 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Bestseller',
-    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80',
-    alt: 'Steamed South Indian idlis with coconut chutney and hot sambar'
+    image: '/assets/images/ghee_podi_button_idlis.png',
+    alt: 'Golden ghee podi button idlis on banana leaf with coconut chutney and hot sambar'
   },
   {
     id: 'dish-8',
@@ -159,28 +208,28 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Morning Star',
-    image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/showcase_steamed_idli.png',
     alt: 'Traditional South Indian idli and crispy vada breakfast plate'
   },
 
   // --- Biryani ---
   {
     id: 'dish-9',
-    name: 'Royal Veg Dum Biryani',
+    name: 'Royal Chicken Dum Biryani',
     category: 'biryani',
     categoryName: 'Dum Biryani',
-    description: 'Long-grain aged basmati rice slow-cooked in handi with seasonal vegetables, brown onions, saffron, and fresh mint. Served with cucumber raita.',
+    description: 'Long-grain aged basmati rice slow-cooked on dum with tender spiced chicken, brown onions, saffron, and fresh mint. Served with cucumber raita.',
     price: 195,
     rating: 4.9,
     reviewsCount: 520,
     prepTime: '15 mins',
     calories: '580 kcal',
-    isVeg: true,
+    isVeg: false,
     isPopular: true,
     isAvailable: true,
     badge: 'Chef Signature',
-    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80',
-    alt: 'Fragrant vegetable biryani garnished with fried onions and mint leaves'
+    image: '/assets/images/chicken_dum_biryani_bowl.png',
+    alt: 'Royal chicken dum biryani garnished with fried onions and mint leaves'
   },
   {
     id: 'dish-10',
@@ -197,28 +246,28 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Rich & Creamy',
-    image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/veg_paneer_biryani_bowl.png',
     alt: 'Paneer biryani served in a traditional clay pot'
   },
 
   // --- Rice Bowls ---
   {
     id: 'dish-11',
-    name: 'Dal Makhani & Jeera Rice Bowl',
+    name: 'Fragrant Ghee Jeera Rice Bowl',
     category: 'rice-bowls',
     categoryName: 'Rice Bowls',
-    description: '24-hour slow-simmered black urad lentils infused with butter, cream, and ginger, served alongside fluffy jeera rice and sirka onions.',
-    price: 140,
+    description: 'Aromatic long-grain basmati rice tempered with whole roasted cumin seeds (jeera), pure desi ghee, and fresh green coriander. Served hot with comforting lentils.',
+    price: 130,
     rating: 4.9,
     reviewsCount: 375,
-    prepTime: '10 mins',
-    calories: '490 kcal',
+    prepTime: '8 mins',
+    calories: '420 kcal',
     isVeg: true,
     isPopular: true,
     isAvailable: true,
-    badge: 'Comfort Bowl',
-    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80',
-    alt: 'Dal makhani rice bowl topped with fresh cream and coriander'
+    badge: 'Jeera Special',
+    image: '/assets/images/fragrant_ghee_jeera_rice_bowl.png',
+    alt: 'Fragrant ghee jeera rice bowl topped with melting golden desi ghee, roasted cumin seeds, fresh coriander, and a brass bowl of warm ghee'
   },
   {
     id: 'dish-12',
@@ -235,7 +284,7 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Classic',
-    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/rajma_chawal_bowl.png',
     alt: 'Homestyle rajma chawal bowl with pickled onions'
   },
   {
@@ -243,7 +292,7 @@ export const MENU_ITEMS = [
     name: 'Amritsari Chole Rice Bowl',
     category: 'rice-bowls',
     categoryName: 'Rice Bowls',
-    description: 'Dark, tangy chickpeas stewed with tea leaves and roasted spices, paired with fragrant basmati rice and tangy kachumber salad.',
+    description: 'Tangy spiced Amritsari chole and slow-cooked Kashmiri rajma served over fragrant steamed basmati rice with sliced red onions and fresh coriander.',
     price: 140,
     rating: 4.7,
     reviewsCount: 195,
@@ -253,8 +302,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Spicy Delight',
-    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80',
-    alt: 'Amritsari chole bowl with seasoned rice'
+    image: '/assets/images/amritsari_chole_rice_bowl.png',
+    alt: 'Amritsari chole and rajma rice bowl with sliced onions'
   },
 
   // --- Sandwiches ---
@@ -273,8 +322,8 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Office Favorite',
-    image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80',
-    alt: 'Grilled gourmet vegetable sandwich cut in triangles with cheese pull'
+    image: '/assets/images/club_sandwich.png',
+    alt: 'Grilled gourmet club sandwich with cheese pull'
   },
   {
     id: 'dish-15',
@@ -291,8 +340,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Artisan',
-    image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80',
-    alt: 'Toasted gourmet paneer panini sandwich'
+    image: '/assets/images/paneer_tikka_focaccia_melt.png',
+    alt: 'Artisan grilled rosemary focaccia melt stuffed with spiced tandoori paneer, peppers, melted mozzarella cheese pull, and fresh mint chutney'
   },
 
   // --- Snacks ---
@@ -311,7 +360,7 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Evening Hit',
-    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/samosa_platter.png',
     alt: 'Golden crispy samosas served with sweet tamarind chutney'
   },
   {
@@ -329,8 +378,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Crispy Gold',
-    image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80',
-    alt: 'Golden crispy medu vada with fresh coconut chutney'
+    image: '/assets/images/medu_vada_platter.png',
+    alt: 'Crispy golden medu vada platter with coconut on banana leaf'
   },
 
   // --- Coffee & Tea ---
@@ -349,8 +398,8 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Top Rated',
-    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
-    alt: 'Freshly brewed artisan coffee with thick golden crema'
+    image: '/assets/images/madras_filter_coffee.png',
+    alt: 'Traditional frothy Madras filter coffee served in authentic brass davarah and tumbler on dark slate coaster with roasted coffee beans'
   },
   {
     id: 'dish-19',
@@ -367,8 +416,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Energizing',
-    image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=800&q=80',
-    alt: 'Iced cold brew coffee latte with glass and ice cubes'
+    image: '/assets/images/cold_brew_hazelnut_latte.png',
+    alt: 'Iced cold brew hazelnut latte with cream swirls and roasted hazelnuts on dark slate coaster'
   },
 
   // --- Fresh Juices ---
@@ -387,8 +436,8 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: '100% Pure',
-    image: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=800&q=80',
-    alt: 'Chilled glass of fresh pure orange juice with fruit slices'
+    image: '/assets/images/cold_pressed_valencia_orange_juice.png',
+    alt: 'Chilled glass of fresh cold-pressed Valencia orange juice with mint and orange slices on dark slate platter'
   },
   {
     id: 'dish-21',
@@ -405,8 +454,8 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Refreshing',
-    image: 'https://images.unsplash.com/photo-1589733955941-5eeaf752f6dd?auto=format&fit=crop&w=800&q=80',
-    alt: 'Chilled pink watermelon juice with mint sprig in tall glass'
+    image: '/assets/images/watermelon_mint_hydration_cooler.png',
+    alt: 'Refreshing iced watermelon mint cooler with fresh watermelon slices on dark slate coaster'
   },
 
   // --- Desserts ---
@@ -425,7 +474,7 @@ export const MENU_ITEMS = [
     isPopular: true,
     isAvailable: true,
     badge: 'Melt-in-Mouth',
-    image: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=800&q=80',
+    image: '/assets/images/warm_shahi_gulab_jamun.png',
     alt: 'Warm gulab jamun in rich golden sugar syrup garnished with pistachios'
   },
   {
@@ -433,7 +482,7 @@ export const MENU_ITEMS = [
     name: 'Royal Kesar Pista Rasmalai (2 pcs)',
     category: 'desserts',
     categoryName: 'Desserts',
-    description: 'Delicate, spongy cottage cheese patties steeped in thickened saffron-infused whole milk with crushed pistachios & almonds.',
+    description: 'Delicate, spongy cottage cheese patties steeped in thickened saffron-infused whole milk with crushed pistachios, almonds & fragrant rose petals.',
     price: 85,
     rating: 4.9,
     reviewsCount: 290,
@@ -443,8 +492,46 @@ export const MENU_ITEMS = [
     isPopular: false,
     isAvailable: true,
     badge: 'Chef Choice',
-    image: 'https://images.unsplash.com/photo-1505253758473-96b46deae27c?auto=format&fit=crop&w=800&q=80',
-    alt: 'Chilled saffron rasmalai dessert topped with sliced nuts'
+    image: '/assets/images/royal_kesar_pista_rasmalai.png',
+    alt: 'Chilled saffron rasmalai dessert steeped in thickened milk with pistachios and rose petals'
+  },
+  {
+    id: 'dish-24',
+    name: 'Chettinad Pepper Chicken Bowl',
+    category: 'rice-bowls',
+    categoryName: 'Rice Bowls',
+    categoryAlias: ['rice-bowls', 'RICE_BOWLS', 'indian-meals'],
+    description: 'Tender chicken braised in freshly roasted black pepper, fennel, curry leaves and coconut gravy, served over steaming hot basmati rice.',
+    price: 185,
+    rating: 4.9,
+    reviewsCount: 340,
+    prepTime: '12 mins',
+    calories: '540 kcal',
+    isVeg: false,
+    isPopular: true,
+    isAvailable: true,
+    badge: 'Spicy Signature',
+    image: '/assets/images/chicken_dum_biryani_bowl.png',
+    alt: 'Chettinad pepper chicken bowl served with fragrant basmati rice'
+  },
+  {
+    id: 'dish-25',
+    name: 'Grilled Chicken Tikka Focaccia Melt',
+    category: 'sandwiches',
+    categoryName: 'Sandwiches',
+    categoryAlias: ['sandwiches', 'SANDWICHES'],
+    description: 'Smoky tandoori chicken tikka, caramelized onions, crisp bell peppers, and melted mozzarella cheese inside warm toasted rosemary focaccia.',
+    price: 155,
+    rating: 4.8,
+    reviewsCount: 230,
+    prepTime: '10 mins',
+    calories: '490 kcal',
+    isVeg: false,
+    isPopular: false,
+    isAvailable: true,
+    badge: 'Artisan Melt',
+    image: '/assets/images/paneer_tikka_focaccia_melt.png',
+    alt: 'Toasted focaccia melt stuffed with smoky chicken tikka and melted cheese'
   }
 ];
 
@@ -547,4 +634,349 @@ export const getCanonicalDish = (item) => {
 
   return null;
 };
+
+/**
+ * 5 Main Signature Dishes for Homepage Showcase Carousel.
+ * Clean, premium selection of flagship royal dishes:
+ * 1. Royal North Indian Thali
+ * 2. Mysore Masala Paper Dosa
+ * 3. Royal Idli & Medu Vada Platter
+ * 4. Royal Chicken Dum Biryani
+ * 5. Tandoori Paneer Tikka Platter
+ */
+export const HOMEPAGE_SIGNATURE_DISHES = [
+  {
+    id: 'showcase-paneer-tikka',
+    name: 'Tandoori Paneer Tikka Platter',
+    badge: 'Tandoor Signature',
+    rating: 4.8,
+    reviewsCount: 265,
+    price: 175,
+    prepTime: '12-15 mins',
+    description:
+      'Charcoal-roasted cottage cheese skewers infused with Kashmiri red chillies, mustard oil, thick hung curd, roasted bell peppers, charred red onions, and tangy mint-coriander chutney.',
+    image: '/assets/images/showcase_paneer_tikka.png',
+    imageUrl: '/assets/images/showcase_paneer_tikka.png',
+    category: 'snacks',
+    categoryAlias: ['snacks', 'SNACKS'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-masala-dosa',
+    name: 'Golden Crispy Masala Dosa',
+    badge: 'South Indian Classic',
+    rating: 4.9,
+    reviewsCount: 410,
+    price: 125,
+    prepTime: '8-10 mins',
+    description:
+      'Crispy, golden-roasted thin rice crepe served on a fresh banana leaf with piping-hot drumstick sambar and tempered coconut chutney.',
+    image: '/assets/images/showcase_masala_dosa.png',
+    imageUrl: '/assets/images/showcase_masala_dosa.png',
+    category: 'dosa',
+    categoryAlias: ['dosa', 'SOUTH_INDIAN', 'south-indian'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-steamed-idli',
+    name: 'Royal Steamed Idli Platter',
+    badge: 'Morning Special',
+    rating: 4.9,
+    reviewsCount: 310,
+    price: 110,
+    prepTime: '6-8 mins',
+    description:
+      'Pillow-soft steamed idlis sprinkled with mustard seeds and curry leaves on fresh banana leaf, paired with rich vegetable sambar and thick coconut chutney.',
+    image: '/assets/images/showcase_steamed_idli.png',
+    imageUrl: '/assets/images/showcase_steamed_idli.png',
+    category: 'idli',
+    categoryAlias: ['idli', 'BREAKFAST', 'south-indian'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-thali-deluxe',
+    name: 'Royal North Indian Thali',
+    badge: "Chef's Royal Thali",
+    rating: 4.9,
+    reviewsCount: 320,
+    price: 180,
+    prepTime: '15-20 mins',
+    description:
+      'A majestic spread of fragrant basmati rice, rich slow-simmered dal makhani, paneer butter masala, seasonal sabzi, hot phulkas, fresh salad, and traditional accompaniments.',
+    image: '/assets/images/showcase_thali_deluxe.png',
+    imageUrl: '/assets/images/showcase_thali_deluxe.png',
+    category: 'indian-meals',
+    categoryAlias: ['indian-meals', 'MEALS', 'north-indian', 'all'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-biryani',
+    name: 'Royal Chicken Dum Biryani',
+    badge: "Chef's Signature",
+    rating: 4.9,
+    reviewsCount: 520,
+    price: 195,
+    prepTime: '15-20 mins',
+    description:
+      'Long-grain fragrant basmati rice slow-cooked on dum with tender spiced chicken, saffron strands, fresh mint, caramelized onions, and house-blended royal potli masala.',
+    image: '/assets/images/biryani_bowl_nobg.png',
+    imageUrl: '/assets/images/biryani_bowl_nobg.png',
+    category: 'biryani',
+    categoryAlias: ['biryani', 'BIRYANI', 'rice-bowls'],
+    isVeg: false,
+  },
+];
+
+/**
+ * 5 Showcase dishes matching the uploaded and cleanly extracted transparent PNGs.
+ * Ordered exactly as requested:
+ * 1. Masala Dosa
+ * 2. Paneer Tikka
+ * 3. North Indian Thali
+ * 4. Idli
+ * 5. Another North Indian food platter (Heritage Royal Thali Feast)
+ */
+export const SHOWCASE_DISHES = [
+  {
+    id: 'showcase-thali-deluxe',
+    name: 'Royal North Indian Thali',
+    badge: "Chef's Royal Thali",
+    rating: 4.9,
+    reviewsCount: 320,
+    price: 180,
+    prepTime: '15-20 mins',
+    description:
+      'A majestic spread of fragrant basmati rice, rich slow-simmered dal makhani, paneer butter masala, seasonal sabzi, hot phulkas, fresh salad, and traditional accompaniments.',
+    image: '/assets/images/showcase_thali_deluxe.png',
+    imageUrl: '/assets/images/showcase_thali_deluxe.png',
+    category: 'indian-meals',
+    categoryAlias: ['indian-meals', 'MEALS', 'north-indian', 'all'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-masala-dosa',
+    name: 'Golden Crispy Masala Dosa',
+    badge: 'South Indian Classic',
+    rating: 4.9,
+    reviewsCount: 410,
+    price: 125,
+    prepTime: '8-10 mins',
+    description:
+      'Crispy, golden-roasted thin rice crepe served on a fresh banana leaf with piping-hot drumstick sambar and tempered coconut chutney.',
+    image: '/assets/images/showcase_masala_dosa.png',
+    imageUrl: '/assets/images/showcase_masala_dosa.png',
+    category: 'dosa',
+    categoryAlias: ['dosa', 'SOUTH_INDIAN', 'south-indian'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-paneer-dosa',
+    name: 'Artisan Paneer Bhurji Dosa',
+    badge: 'Chef Special',
+    rating: 4.8,
+    reviewsCount: 164,
+    price: 145,
+    prepTime: '10-12 mins',
+    description:
+      'Crunchy golden crepe stuffed with fresh spiced paneer bhurji, served with coconut chutney, mint chutney, and spicy tomato chutney.',
+    image: '/assets/images/paneer_bhurji_dosa.png',
+    imageUrl: '/assets/images/paneer_bhurji_dosa.png',
+    category: 'dosa',
+    categoryAlias: ['dosa', 'SOUTH_INDIAN', 'south-indian'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-steamed-idli',
+    name: 'Royal Steamed Idli Platter',
+    badge: 'Morning Special',
+    rating: 4.9,
+    reviewsCount: 310,
+    price: 110,
+    prepTime: '6-8 mins',
+    description:
+      'Pillow-soft steamed idlis sprinkled with mustard seeds and curry leaves on fresh banana leaf, paired with rich vegetable sambar and thick coconut chutney.',
+    image: '/assets/images/showcase_steamed_idli.png',
+    imageUrl: '/assets/images/showcase_steamed_idli.png',
+    category: 'idli',
+    categoryAlias: ['idli', 'BREAKFAST', 'south-indian'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-biryani',
+    name: 'Royal Chicken Dum Biryani',
+    badge: "Chef's Signature",
+    rating: 4.9,
+    reviewsCount: 520,
+    price: 195,
+    prepTime: '15-20 mins',
+    description:
+      'Long-grain fragrant basmati rice slow-cooked on dum with tender spiced chicken, saffron strands, fresh mint, caramelized onions, and house-blended royal potli masala.',
+    image: '/assets/images/biryani_bowl_nobg.png',
+    imageUrl: '/assets/images/biryani_bowl_nobg.png',
+    category: 'biryani',
+    categoryAlias: ['biryani', 'BIRYANI', 'rice-bowls'],
+    isVeg: false,
+  },
+  {
+    id: 'showcase-paneer-tikka',
+    name: 'Tandoori Paneer Tikka Platter',
+    badge: 'Tandoor Signature',
+    rating: 4.8,
+    reviewsCount: 265,
+    price: 175,
+    prepTime: '12-15 mins',
+    description:
+      'Charcoal-roasted cottage cheese skewers infused with Kashmiri red chillies, mustard oil, thick hung curd, roasted bell peppers, charred red onions, and tangy mint-coriander chutney.',
+    image: '/assets/images/showcase_paneer_tikka.png',
+    imageUrl: '/assets/images/showcase_paneer_tikka.png',
+    category: 'snacks',
+    categoryAlias: ['snacks', 'SNACKS'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-samosa',
+    name: 'Crispy Punjabi Samosa Platter',
+    badge: 'Evening Hit',
+    rating: 4.9,
+    reviewsCount: 460,
+    price: 60,
+    prepTime: '5-8 mins',
+    description:
+      'Golden, flaky handmade pastry crust stuffed with spiced potatoes, green peas, and cashews. Served with tamarind & spicy mint dips.',
+    image: '/assets/images/samosa_platter.png',
+    imageUrl: '/assets/images/samosa_platter.png',
+    category: 'snacks',
+    categoryAlias: ['snacks', 'SNACKS'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-rice-bowl',
+    name: 'Royal Jeera Rice Bowl',
+    badge: 'Jeera Special',
+    rating: 4.9,
+    reviewsCount: 290,
+    price: 130,
+    prepTime: '8-10 mins',
+    description:
+      'Aromatic long-grain basmati rice tempered with whole roasted cumin seeds (jeera), pure desi ghee, and fresh green coriander. Served hot in a rustic artisan bowl.',
+    image: '/assets/images/jeera_rice_bowl.png',
+    imageUrl: '/assets/images/jeera_rice_bowl.png',
+    category: 'rice-bowls',
+    categoryAlias: ['rice-bowls', 'RICE_BOWLS'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-rajma-chawal',
+    name: 'Punjabi Rajma Chawal Bowl',
+    badge: 'Desi Classic',
+    rating: 4.8,
+    reviewsCount: 260,
+    price: 135,
+    prepTime: '10-12 mins',
+    description:
+      'Homestyle slow-braised red kidney beans in rich spiced onion-tomato gravy, served over steaming basmati rice with lime & fresh coriander.',
+    image: '/assets/images/rajma_chawal_bowl.png',
+    imageUrl: '/assets/images/rajma_chawal_bowl.png',
+    category: 'rice-bowls',
+    categoryAlias: ['rice-bowls', 'RICE_BOWLS'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-veg-biryani',
+    name: 'Paneer Makhani Biryani Bowl',
+    badge: 'Chef Signature',
+    rating: 4.8,
+    reviewsCount: 290,
+    price: 215,
+    prepTime: '15 mins',
+    description:
+      'Marinated soft paneer cubes cooked in velvet makhani gravy layered with spiced basmati biryani rice and toasted cashews.',
+    image: '/assets/images/veg_paneer_biryani_bowl.png',
+    imageUrl: '/assets/images/veg_paneer_biryani_bowl.png',
+    category: 'biryani',
+    categoryAlias: ['biryani', 'BIRYANI'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-sandwich',
+    name: 'Gourmet Bombay Club Sandwich',
+    badge: 'Quick Bite',
+    rating: 4.7,
+    reviewsCount: 185,
+    price: 120,
+    prepTime: '8-10 mins',
+    description:
+      'Triple-decker toasted artisan sourdough layered with mint chutney, sliced potatoes, cucumbers, ripe tomatoes, melted amul cheese, and house chaat masala.',
+    image: '/assets/images/club_sandwich.png',
+    imageUrl: '/assets/images/club_sandwich.png',
+    category: 'sandwiches',
+    categoryAlias: ['sandwiches', 'SANDWICHES'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-coffee',
+    name: 'Degree Kumbakonam Filter Coffee',
+    badge: 'Heritage Brew',
+    rating: 5.0,
+    reviewsCount: 640,
+    price: 45,
+    prepTime: '3-5 mins',
+    description:
+      'Freshly roasted plantation peaberry and chicory decoction frothed with boiling thick farm milk, served piping hot in a classic cup with roasted coffee beans.',
+    image: '/assets/images/filter_coffee.png',
+    imageUrl: '/assets/images/filter_coffee.png',
+    category: 'coffee',
+    categoryAlias: ['coffee', 'COFFEE', 'beverages'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-juice',
+    name: 'Fresh Cold-Pressed Valencia Juice',
+    badge: 'Cold Pressed',
+    rating: 4.8,
+    reviewsCount: 175,
+    price: 85,
+    prepTime: '4-6 mins',
+    description:
+      '100% pure cold-pressed Valencia oranges and sweet lime with no added sugar or water, bursting with natural vitamin C and invigorating citrus freshness.',
+    image: '/assets/images/cold_pressed_valencia_orange_juice.png',
+    imageUrl: '/assets/images/cold_pressed_valencia_orange_juice.png',
+    category: 'juice',
+    categoryAlias: ['juice', 'JUICE', 'beverages'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-watermelon',
+    name: 'Watermelon Mint Hydration Cooler',
+    badge: 'Summer Special',
+    rating: 4.8,
+    reviewsCount: 195,
+    price: 80,
+    prepTime: '4 mins',
+    description:
+      'Fresh seedless watermelon crushed with garden mint leaves, a squeeze of key lime, and Himalayan pink rock salt. Chilled to perfection.',
+    image: '/assets/images/watermelon_mint_hydration_cooler.png',
+    imageUrl: '/assets/images/watermelon_mint_hydration_cooler.png',
+    category: 'juice',
+    categoryAlias: ['juice', 'JUICE', 'beverages'],
+    isVeg: true,
+  },
+  {
+    id: 'showcase-thali-royal',
+    name: 'Heritage Royal Thali Feast',
+    badge: 'Grand Feast Selection',
+    rating: 5.0,
+    reviewsCount: 480,
+    price: 220,
+    prepTime: '15-20 mins',
+    description:
+      'The crown jewel of traditional dining: aromatic ghee rice, smoked paneer tikka, yellow tadka dal, palak paneer, spiced bhindi, crispy paratha, papadum, and house-made festive dessert.',
+    image: '/assets/images/showcase_thali_royal.png',
+    imageUrl: '/assets/images/showcase_thali_royal.png',
+    category: 'all',
+    categoryAlias: ['all', 'MEALS'],
+    isVeg: true,
+  },
+];
+
 

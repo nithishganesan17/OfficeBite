@@ -3,27 +3,20 @@
 @theme {
   --font-heading: 'Outfit', sans-serif;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-script: 'Dancing Script', cursive;
+  --font-handwriting: 'Caveat', cursive;
+  --font-serif: 'Playfair Display', Georgia, serif;
 
-  /* Kanigiri Restaurant Theme (Customer Portal) */
-  --color-warm-cream: #FAF6EE;
-  --color-warm-cream-light: #FDFBF7;
-  --color-warm-cream-border: #EAE3D6;
-  --color-warm-cream-dark: #F2ECE0;
+  /* Premium Charcoal & Gold Theme (Inspired by Steakhouse reference) */
+  --color-dark-bg: #121212;
+  --color-dark-surface: #181818;
+  --color-dark-card: #1F1F1F;
+  --color-dark-border: rgba(255, 255, 255, 0.1);
+  --color-dark-border-hover: rgba(245, 158, 11, 0.5);
 
-  --color-olive-primary: #3D5A2B;
-  --color-olive-dark: #2E4620;
-  --color-olive-light: #EEF3E8;
-  --color-olive-border: #D4E0C9;
-  --color-olive-accent: #507538;
-
-  --color-saffron-gold: #D48B18;
-  --color-saffron-bright: #E5A93C;
-  --color-saffron-light: #FDF5E6;
-  --color-saffron-border: #F8E3BA;
-
-  --color-dark-brown: #261C14;
-  --color-dark-brown-soft: #3A2B20;
-  --color-dark-brown-muted: #73675C;
+  --color-gold-primary: #F59E0B;
+  --color-gold-hover: #D97706;
+  --color-gold-light: #FDE68A;
 
   /* Kitchen Staff Theme (Navy & Cyan Portal) */
   --color-staff-navy: #0B192C;
@@ -43,34 +36,34 @@
 }
 
 :root {
-  color-scheme: light;
-  background-color: #FAF6EE;
-  color: #261C14;
+  color-scheme: dark;
+  background-color: #121212;
+  color: #F3F4F6;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #FAF6EE;
-  color: #261C14;
+  background-color: #121212;
+  color: #F3F4F6;
   overflow-x: hidden;
 }
 
-/* Custom refined scrollbars */
+/* Custom refined dark scrollbars */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAF6EE;
+  background: #121212;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D8D0C0;
+  background: #333333;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BDB29F;
+  background: #555555;
 }
 
 /* 3D perspective wrapper for card lift and tilt */
@@ -146,3 +139,347 @@ body {
     transform: none !important;
   }
 }
+
+/* Hide scrollbar for category and horizontal variety scrolls */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 3D Food Plate Carousel Lighting & Floating Effects */
+@keyframes floatGarnish1 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(6deg);
+  }
+}
+
+@keyframes floatGarnish2 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(6px) rotate(-8deg);
+  }
+}
+
+.animate-float-garnish-1 {
+  animation: floatGarnish1 4.5s ease-in-out infinite;
+}
+
+.animate-float-garnish-2 {
+  animation: floatGarnish2 5.2s ease-in-out infinite;
+}
+
+/* Plated dish deep drop shadow */
+.shadow-plate {
+  box-shadow: 0 25px 50px -12px rgba(38, 28, 20, 0.35), 0 12px 24px -8px rgba(232, 89, 12, 0.18);
+}
+
+/* Floating garnishes & food showcase steam animations */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-7px) rotate(4deg); }
+}
+
+@keyframes floatMedium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(-6deg); }
+}
+
+@keyframes floatFast {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(8deg); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: floatMedium 4.5s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: floatFast 3.8s ease-in-out infinite;
+}
+
+@keyframes steamRise1 {
+  0% { transform: translateY(0) scaleX(1); opacity: 0; }
+  35% { opacity: 0.55; }
+  100% { transform: translateY(-40px) scaleX(1.4) rotate(-4deg); opacity: 0; }
+}
+
+@keyframes steamRise2 {
+  0% { transform: translateY(0) scaleX(1); opacity: 0; }
+  35% { opacity: 0.65; }
+  100% { transform: translateY(-48px) scaleX(1.6) rotate(6deg); opacity: 0; }
+}
+
+@keyframes steamRise3 {
+  0% { transform: translateY(0) scaleX(1); opacity: 0; }
+  35% { opacity: 0.45; }
+  100% { transform: translateY(-36px) scaleX(1.3) rotate(-3deg); opacity: 0; }
+}
+
+.animate-steam-rise-1 {
+  animation: steamRise1 3.2s ease-out infinite;
+}
+
+.animate-steam-rise-2 {
+  animation: steamRise2 4.1s ease-out infinite 0.7s;
+}
+
+.animate-steam-rise-3 {
+  animation: steamRise3 3.6s ease-out infinite 1.3s;
+}
+
+@keyframes fadeInFast {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeInFast 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Smooth horizontal sliding keyframes for homepage food showcase (Slide Only, No Rotation, No Scale Distortion) */
+@keyframes dishSlideInFromRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dishSlideInFromLeft {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-dish-slide-next {
+  animation: dishSlideInFromRight 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-dish-slide-prev {
+  animation: dishSlideInFromLeft 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-dish-enter-next {
+  animation: dishSlideInFromRight 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-dish-enter-prev {
+  animation: dishSlideInFromLeft 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Homepage Chef's Signature Showcase — Floating & Glowing Aura Food Animation */
+@keyframes floatShowcaseDish {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-1deg);
+  }
+}
+
+@keyframes showcaseAuraGlow {
+  0%, 100% {
+    filter: drop-shadow(0 20px 38px rgba(0, 0, 0, 0.92))
+            drop-shadow(0 0 6px rgba(245, 158, 11, 0.16));
+  }
+  50% {
+    filter: drop-shadow(0 26px 46px rgba(0, 0, 0, 0.95))
+            drop-shadow(0 0 12px rgba(245, 158, 11, 0.28));
+  }
+}
+
+.anim-showcase-dish {
+  animation: floatShowcaseDish 3.2s ease-in-out infinite, showcaseAuraGlow 3.8s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform, filter;
+}
+
+/* ==========================================================================
+   Menu Page Food Showcase Transitions (Slide & Scale, No Rotation)
+   ========================================================================== */
+@keyframes menuDishEnterFromRight {
+  0% {
+    transform: translateX(75%) scale(0.68);
+    opacity: 0.35;
+    filter: blur(4px);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@keyframes menuDishEnterFromLeft {
+  0% {
+    transform: translateX(-75%) scale(0.68);
+    opacity: 0.35;
+    filter: blur(4px);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+@keyframes menuDishExitToLeft {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    transform: translateX(-75%) scale(0.68);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+@keyframes menuDishExitToRight {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    transform: translateX(75%) scale(0.68);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+.animate-menu-dish-enter-right {
+  animation: menuDishEnterFromRight 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-menu-dish-enter-left {
+  animation: menuDishEnterFromLeft 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-menu-dish-exit-left {
+  animation: menuDishExitToLeft 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-menu-dish-exit-right {
+  animation: menuDishExitToRight 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ==========================================================================
+   Homepage Master Chef & Floating Masala Powder Animations
+   ========================================================================== */
+@keyframes chefBounce {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-16px) scale(1.015);
+  }
+}
+
+@keyframes masalaPowderPulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1) translate(0px, 0px);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.18) translate(-6px, -10px);
+  }
+}
+
+@keyframes floatSpiceSlow {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  33% {
+    transform: translate(8px, -15px) rotate(10deg);
+  }
+  66% {
+    transform: translate(-8px, -24px) rotate(-8deg);
+  }
+}
+
+@keyframes floatSpiceMed {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  50% {
+    transform: translate(-12px, -20px) rotate(-14deg);
+  }
+}
+
+@keyframes floatSpiceFast {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(14px, -26px) rotate(16deg) scale(1.1);
+  }
+}
+
+@keyframes floatMote {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-22px) scale(1.25);
+    opacity: 0.95;
+  }
+}
+
+.animate-chef-bounce {
+  animation: chefBounce 2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-powder-pulse {
+  animation: masalaPowderPulse 5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-spice-slow {
+  animation: floatSpiceSlow 6.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-spice-med {
+  animation: floatSpiceMed 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-spice-fast {
+  animation: floatSpiceFast 3.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-mote {
+  animation: floatMote 2.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+
+
+
+

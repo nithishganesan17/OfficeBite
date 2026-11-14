@@ -66,9 +66,9 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
       />
 
       {/* Modal Container */}
-      <div className="relative bg-[#FAF8F2] w-full max-w-lg rounded-3xl shadow-2xl border border-[#EDE8DC] overflow-hidden z-10 animate-scale-up">
+      <div className="relative bg-[#F4F7EF] w-full max-w-lg rounded-3xl shadow-2xl border border-[#D8E2CE] overflow-hidden z-10 animate-scale-up">
         {/* Header */}
-        <div className="bg-white p-5 border-b border-[#EDE8DC] flex items-center justify-between">
+        <div className="bg-white p-5 border-b border-[#D8E2CE] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
               <Utensils className="w-5 h-5" />
@@ -83,7 +83,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
           {!confirmedOrder && (
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[#78716C] hover:bg-[#F4EFE6] transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#78716C] hover:bg-[#E5EDDC] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -110,7 +110,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
             </div>
 
             {/* Token Badge */}
-            <div className="bg-white rounded-2xl p-5 border border-[#EDE8DC] shadow-sm max-w-xs mx-auto">
+            <div className="bg-white rounded-2xl p-5 border border-[#D8E2CE] shadow-sm max-w-xs mx-auto">
               <span className="text-[11px] font-semibold text-[#78716C] uppercase tracking-wider">
                 Pickup Token Number
               </span>
@@ -120,7 +120,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
               <p className="text-xs text-[#78716C]">
                 Estimated Ready: <strong>{confirmedOrder.estimatedMinutes} mins</strong>
               </p>
-              <div className="mt-3 pt-3 border-t border-[#F4EFE6] text-xs font-medium text-[#292524] flex items-center justify-center gap-1.5">
+              <div className="mt-3 pt-3 border-t border-[#E5EDDC] text-xs font-medium text-[#292524] flex items-center justify-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#F28C45]" />
                 <span>{confirmedOrder.deliveryLocation}</span>
               </div>
@@ -165,7 +165,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                   className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                     deliveryType === 'CANTEEN_PICKUP'
                       ? 'border-[#197A50] bg-white ring-2 ring-[#197A50]/20 shadow-xs'
-                      : 'border-[#EDE8DC] bg-white/60 hover:bg-white text-[#78716C]'
+                      : 'border-[#D8E2CE] bg-white/60 hover:bg-white text-[#78716C]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                   className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                     deliveryType === 'DESK_DELIVERY'
                       ? 'border-[#197A50] bg-white ring-2 ring-[#197A50]/20 shadow-xs'
-                      : 'border-[#EDE8DC] bg-white/60 hover:bg-white text-[#78716C]'
+                      : 'border-[#D8E2CE] bg-white/60 hover:bg-white text-[#78716C]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -203,7 +203,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
 
             {/* Desk Location Input if Delivery */}
             {deliveryType === 'DESK_DELIVERY' && (
-              <div className="bg-white rounded-2xl p-4 border border-[#EDE8DC] space-y-3">
+              <div className="bg-white rounded-2xl p-4 border border-[#D8E2CE] space-y-3">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#292524]">
                   <Building2 className="w-3.5 h-3.5 text-[#197A50]" />
                   <span>Workstation Location</span>
@@ -214,7 +214,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                     <select
                       value={tower}
                       onChange={(e) => setTower(e.target.value)}
-                      className="w-full text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl px-2.5 py-2 text-[#292524] focus:outline-none focus:border-[#197A50]"
+                      className="w-full text-xs bg-[#F4F7EF] border border-[#D8E2CE] rounded-xl px-2.5 py-2 text-[#292524] focus:outline-none focus:border-[#197A50]"
                     >
                       <option value="Tower A">Tower A (Tech Hub)</option>
                       <option value="Tower B">Tower B (Finance & HR)</option>
@@ -226,7 +226,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                     <select
                       value={floor}
                       onChange={(e) => setFloor(e.target.value)}
-                      className="w-full text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl px-2.5 py-2 text-[#292524] focus:outline-none focus:border-[#197A50]"
+                      className="w-full text-xs bg-[#F4F7EF] border border-[#D8E2CE] rounded-xl px-2.5 py-2 text-[#292524] focus:outline-none focus:border-[#197A50]"
                     >
                       <option value="Floor 2">Floor 2</option>
                       <option value="Floor 3">Floor 3</option>
@@ -243,7 +243,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                     value={deskNumber}
                     onChange={(e) => setDeskNumber(e.target.value)}
                     placeholder="E.g., Desk 412, Bay C"
-                    className="w-full text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl px-3 py-2 text-[#292524] focus:outline-none focus:border-[#197A50]"
+                    className="w-full text-xs bg-[#F4F7EF] border border-[#D8E2CE] rounded-xl px-3 py-2 text-[#292524] focus:outline-none focus:border-[#197A50]"
                   />
                 </div>
               </div>
@@ -259,7 +259,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                 value={specialInstructions}
                 onChange={(e) => setSpecialInstructions(e.target.value)}
                 placeholder="E.g., Extra hot sambar, less spicy, pack chutney separately..."
-                className="w-full text-xs bg-white border border-[#EDE8DC] rounded-xl p-3 text-[#292524] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#197A50]"
+                className="w-full text-xs bg-white border border-[#D8E2CE] rounded-xl p-3 text-[#292524] placeholder:text-[#A8A29E] focus:outline-none focus:border-[#197A50]"
               />
             </div>
 
@@ -273,7 +273,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                   className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
                     paymentMethod === 'PAYROLL_BADGE'
                       ? 'border-[#197A50] bg-white ring-1 ring-[#197A50]/20'
-                      : 'border-[#EDE8DC] bg-white/60'
+                      : 'border-[#D8E2CE] bg-white/60'
                   }`}
                 >
                   <input
@@ -303,7 +303,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                   className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
                     paymentMethod === 'UPI'
                       ? 'border-[#197A50] bg-white ring-1 ring-[#197A50]/20'
-                      : 'border-[#EDE8DC] bg-white/60'
+                      : 'border-[#D8E2CE] bg-white/60'
                   }`}
                 >
                   <input
@@ -323,7 +323,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
             </div>
 
             {/* Bill Summary */}
-            <div className="bg-white rounded-2xl p-4 border border-[#EDE8DC] space-y-2 text-xs">
+            <div className="bg-white rounded-2xl p-4 border border-[#D8E2CE] space-y-2 text-xs">
               <div className="flex justify-between text-[#78716C]">
                 <span>Items ({cartItems.length} dishes)</span>
                 <span className="font-medium text-[#292524]">₹{subtotal.toFixed(2)}</span>
@@ -338,7 +338,7 @@ export const CheckoutModal = ({ isOpen, onClose, initialNote = '' }) => {
                   <span className="font-medium text-[#DE752C]">₹15.00</span>
                 </div>
               )}
-              <div className="pt-2 border-t border-[#EDE8DC] flex justify-between font-extrabold text-sm text-[#292524]">
+              <div className="pt-2 border-t border-[#D8E2CE] flex justify-between font-extrabold text-sm text-[#292524]">
                 <span>Total Amount to Pay</span>
                 <span className="text-base text-[#197A50]">₹{grandTotal.toFixed(2)}</span>
               </div>
