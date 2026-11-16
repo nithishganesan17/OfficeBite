@@ -1,11 +1,11 @@
 import React from 'react';
-import { RoleSelectionPage } from './RoleSelectionPage';
+import { CustomerLoginPage } from './CustomerLoginPage';
 
 /**
- * Re-exports RoleSelectionPage at /login for role destination selection
+ * Re-exports CustomerLoginPage at /login
  */
 export const LoginPage = () => {
-  return <RoleSelectionPage />;
+  return <CustomerLoginPage />;
 };
 
 export default LoginPage;

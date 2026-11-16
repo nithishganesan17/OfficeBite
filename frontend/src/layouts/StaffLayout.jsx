@@ -1,21 +1,29 @@
 import React from 'react';
 import { Outlet, useNavigate, Link } from 'react-router-dom';
-import { ChefHat, LogOut, ShieldCheck, Activity } from 'lucide-react';
+import { ChefHat, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Toast } from '../components/common/Toast';
 
 /**
  * Dedicated Kitchen Staff Portal Layout.
- * Restored original warm culinary identity:
- * Crisp white/stone backdrop (#FAF8F5), warm amber/orange branding (#F28C45 / #DE752C), and emerald status cues (#197A50).
- * Strictly excludes customer shopping navbar, cart drawer, and admin controls.
+ * Dark theme matching OfficeBite customer and admin portals (#121212, #1A1A1A, #F59E0B).
  */
 export const StaffLayout = () => {
-  const { currentUser, logout, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
+  const staffUser = (() => {
+    try {
+      const raw = localStorage.getItem('officebite_staff_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })() || { name: 'Kitchen Staff', role: 'STAFF', employeeId: 'STAFF-01' };
+
   const handleSignOut = () => {
-    logout();
+    localStorage.removeItem('officebite_staff_token');
+    localStorage.removeItem('officebite_staff_user');
     navigate('/staff/login', { replace: true });
   };
 
@@ -31,61 +39,45 @@ export const StaffLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] flex flex-col text-[#292524] selection:bg-[#F28C45]/20 selection:text-[#DE752C]">
+    <div className="min-h-screen bg-[#121212] flex flex-col text-[#F3F4F6] selection:bg-[#F59E0B]/30 selection:text-[#F59E0B]">
       {/* Kitchen Terminal Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EDE8DC] text-[#292524] shadow-xs">
+      <header className="sticky top-0 z-40 bg-[#1A1A1A]/95 backdrop-blur-md border-b border-white/10 text-white shadow-md">
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Terminal Branding */}
+            {/* Terminal Branding - Clean OfficeBite branding */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#F28C45] to-[#DE752C] flex items-center justify-center text-white shadow-sm">
-                <ChefHat className="w-5 h-5 stroke-[2.2]" />
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#F59E0B] to-[#D97706] flex items-center justify-center text-[#121212] font-black shadow-sm">
+                <ChefHat className="w-5 h-5 stroke-[2.4]" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-lg text-[#292524] tracking-tight">OfficeBite</span>
-                  <span className="px-2 py-0.5 rounded-md bg-[#FEF3EB] text-[#DE752C] border border-[#FBD8BC] text-[10px] font-black uppercase tracking-wider">
-                    Kitchen Terminal
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#78716C] hidden sm:block">
-                  Live Preparation Queue & Counter Token Fulfillment
-                </p>
-              </div>
+              <span className="font-extrabold text-xl text-white tracking-tight">OfficeBite</span>
             </div>
 
-            {/* Terminal Status Indicators & Staff User Controls */}
+            {/* Staff Controls */}
             <div className="flex items-center gap-3">
-              {/* Station Live Badge */}
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#EBF5F0] border border-[#C8E6D6] text-[#197A50] text-xs font-bold">
-                <span className="w-2 h-2 rounded-full bg-[#197A50] animate-pulse" />
-                <span>Station 1 Operational</span>
-              </div>
-
               {/* Admin return jump if admin logged in */}
               {isAdmin && (
                 <Link
                   to="/admin"
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors border border-slate-200"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 text-xs font-bold transition-colors border border-white/10"
                   title="Return to Admin Management"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-800" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#F59E0B]" />
                   <span>Admin Console</span>
                 </Link>
               )}
 
               {/* Staff Profile Capsule */}
-              {currentUser && (
-                <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white border border-[#EDE8DC] shadow-2xs">
-                  <div className="w-7 h-7 rounded-xl bg-[#FEF3EB] text-[#DE752C] border border-[#FBD8BC] flex items-center justify-center font-bold text-xs shadow-2xs">
-                    {getInitials(currentUser.name)}
+              {staffUser && (
+                <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-[#262626] border border-white/10 shadow-xs">
+                  <div className="w-7 h-7 rounded-xl bg-[#F59E0B] text-[#121212] flex items-center justify-center font-black text-xs">
+                    {getInitials(staffUser.name)}
                   </div>
                   <div className="text-left hidden sm:block">
-                    <p className="text-xs font-bold text-[#292524] leading-tight truncate max-w-[120px]">
-                      {currentUser.name}
+                    <p className="text-xs font-bold text-white leading-tight truncate max-w-[120px]">
+                      {staffUser.name}
                     </p>
-                    <p className="text-[10px] font-extrabold text-[#DE752C] tracking-wide uppercase">
-                      {currentUser.role} {currentUser.employeeId ? `• ${currentUser.employeeId}` : ''}
+                    <p className="text-[10px] font-bold text-[#F59E0B] tracking-wide uppercase">
+                      {staffUser.role}
                     </p>
                   </div>
                 </div>
@@ -96,7 +88,7 @@ export const StaffLayout = () => {
                 type="button"
                 onClick={handleSignOut}
                 id="staff-logout-btn"
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-950/40 border border-red-800/60 text-red-400 hover:bg-red-900/40 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                 title="Sign out of Kitchen Staff Terminal"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -111,17 +103,6 @@ export const StaffLayout = () => {
       <main className="flex-1">
         <Outlet />
       </main>
-
-      {/* Terminal Footer */}
-      <footer className="bg-white border-t border-[#EDE8DC] py-4 text-center text-xs text-[#78716C]">
-        <div className="max-w-[1700px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#197A50] animate-pulse" />
-            <span>Kitchen Display System • Station 1 (Floor 3) • Connected to Spring Boot & MySQL</span>
-          </div>
-          <span className="text-[#A8A29E]">OfficeBite Enterprise Kitchen Terminal</span>
-        </div>
-      </footer>
 
       {/* Toast notifications */}
       <Toast />

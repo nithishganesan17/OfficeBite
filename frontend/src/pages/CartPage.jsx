@@ -7,13 +7,11 @@ import {
   Trash2,
   Plus,
   Minus,
-  Clock,
-  ShieldCheck,
-  Sparkles,
   Utensils,
   ChevronRight,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { resolveDishImage } from '../data/mockData';
 
 export const CartPage = () => {
   const navigate = useNavigate();
@@ -52,17 +50,9 @@ export const CartPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-8">
         <div>
-          <span className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider bg-[#F59E0B]/15 px-3 py-1 rounded-full border border-[#F59E0B]/30">
-            Canteen Food Tray
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Your Shopping Cart
           </h1>
-          <p className="text-xs sm:text-sm text-white/60 mt-1">
-            {totalItemCount === 0
-              ? 'Your tray is currently empty'
-              : `${totalItemCount} ${totalItemCount === 1 ? 'unit' : 'units'} selected from Floor 3 Live Kitchen`}
-          </p>
         </div>
 
         {cartItems.length > 0 && (
@@ -105,7 +95,7 @@ export const CartPage = () => {
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <Utensils className="w-4 h-4" />
-              <span>Explore Canteen Menu</span>
+              <span>Explore Menu</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
@@ -131,15 +121,14 @@ export const CartPage = () => {
                   {/* Food Info & Thumbnail */}
                   <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
                     <img
-                      src={imgErrors[item.id] ? fallbackImg : item.image || item.imageUrl || fallbackImg}
+                      src={imgErrors[item.id] ? fallbackImg : resolveDishImage(item) || fallbackImg}
                       alt={item.name}
                       onError={() => handleImgError(item.id)}
                       className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover shrink-0 bg-[#262626] border border-white/10"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* DISH NAME IN BOLD STYLISH HANDWRITING (Caveat) */}
-                        <h3 className="font-['Caveat',cursive] font-bold text-xl sm:text-2xl text-white truncate tracking-wide">
+                        <h3 className="font-bold text-base sm:text-lg text-white truncate">
                           {item.name}
                         </h3>
                         {item.category && (
@@ -148,9 +137,11 @@ export const CartPage = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-white/50 mt-1 line-clamp-1">
-                        {item.description || 'Prepared fresh at Tower A kitchen'}
-                      </p>
+                      {item.description && (
+                        <p className="text-xs text-white/50 mt-1 line-clamp-1">
+                          {item.description}
+                        </p>
+                      )}
                       <p className="text-xs font-semibold text-[#F59E0B] mt-1">
                         ₹{item.price} per unit
                       </p>
@@ -211,7 +202,7 @@ export const CartPage = () => {
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <div className="pt-2">
               <Link
                 to="/menu"
                 className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#F59E0B] hover:underline"
@@ -219,28 +210,21 @@ export const CartPage = () => {
                 <ArrowLeft className="w-4 h-4" />
                 <span>Continue Ordering from Menu</span>
               </Link>
-              <div className="flex items-center gap-2 text-xs text-white/50">
-                <Clock className="w-3.5 h-3.5 text-[#F59E0B]" />
-                <span>Live Kitchen estimated prep time: 10-15 mins</span>
-              </div>
             </div>
           </div>
 
           {/* ORDER SUMMARY (Right Column) */}
           <div className="lg:col-span-4 sticky top-24">
             <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xs p-6 space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="pb-3 border-b border-white/10">
                 <h3 className="font-extrabold text-base text-white">Order Summary</h3>
-                <span className="text-xs font-bold text-[#F59E0B] bg-[#F59E0B]/15 border border-[#F59E0B]/30 px-2.5 py-0.5 rounded-full">
-                  Floor 3 Canteen
-                </span>
               </div>
 
-              {/* Requirement 8: Calculate subtotal and grand total correctly without invented fees/taxes */}
+              {/* Items Subtotal & Grand Total */}
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex justify-between text-white/60">
                   <span>Total Ordered Units</span>
-                  <span className="font-bold text-white">{totalItemCount} units</span>
+                  <span className="font-bold text-white">{totalItemCount} {totalItemCount === 1 ? 'unit' : 'units'}</span>
                 </div>
                 <div className="flex justify-between text-white/60">
                   <span>Items Subtotal</span>
@@ -268,17 +252,6 @@ export const CartPage = () => {
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              <div className="pt-2 border-t border-white/10 space-y-2 text-[11px] text-white/50">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#F59E0B] shrink-0" />
-                  <span>Direct Corporate Payroll or UPI • Instant token</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Prepared fresh on order at Floor 3 live kitchen</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

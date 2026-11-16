@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/common/Navbar';
 import { Footer } from '../components/common/Footer';
 import { CartDrawer } from '../components/common/CartDrawer';
@@ -13,6 +13,12 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
  * Strictly used for customer-facing routes (/ , /menu, /cart, /checkout, /orders).
  */
 export const CustomerLayout = () => {
+  const location = useLocation();
+  const hideFooter =
+    location.pathname.startsWith('/checkout') ||
+    location.pathname.startsWith('/cart') ||
+    location.pathname.startsWith('/orders');
+
   const handleSearchClick = () => {
     const searchInput = document.querySelector('input[type="text"]');
     if (searchInput) {
@@ -34,7 +40,7 @@ export const CustomerLayout = () => {
         </ErrorBoundary>
       </main>
 
-      <Footer />
+      {!hideFooter && <Footer />}
 
       {/* Global customer drawer & modals */}
       <CartDrawer />

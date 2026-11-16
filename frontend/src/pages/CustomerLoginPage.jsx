@@ -7,18 +7,16 @@ import {
   EyeOff,
   AlertCircle,
   Loader2,
-  UtensilsCrossed,
   ArrowRight,
-  ShieldCheck,
-  ChevronLeft,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 /**
  * CustomerLoginPage
- * Styled with Kanigiri warm cream, olive green, saffron gold, and dark brown.
+ * Clean, dark-themed login interface matching OfficeBite homepage.
+ * Simplified strictly to: 'Log In', Work Email, Password, and Submit.
+ * If administrator credentials are submitted, navigates directly to /admin.
  */
 export const CustomerLoginPage = () => {
   const navigate = useNavigate();
@@ -32,10 +30,23 @@ export const CustomerLoginPage = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If already authenticated with customer, redirect
+  // If already authenticated, redirect
   useEffect(() => {
+    const adminTok = localStorage.getItem('officebite_admin_token');
+    const rawAdmin = localStorage.getItem('officebite_admin_user');
+    let adminU = null;
+    try { adminU = rawAdmin ? JSON.parse(rawAdmin) : null; } catch {}
+    if ((adminTok && adminU?.role === 'ADMIN') || (currentUser?.role === 'ADMIN')) {
+      navigate('/admin', { replace: true });
+      return;
+    }
+
     if (isAuthenticated && currentUser) {
-      if (currentUser.role === 'CUSTOMER') {
+      if (currentUser.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else if (currentUser.role === 'STAFF') {
+        navigate('/staff', { replace: true });
+      } else {
         const dest = location.state?.from;
         const isCustomerDest = dest && !dest.startsWith('/staff') && !dest.startsWith('/admin');
         navigate(isCustomerDest ? dest : '/', { replace: true });
@@ -57,15 +68,21 @@ export const CustomerLoginPage = () => {
     try {
       const user = await loginUser(trimmedEmail, password, null);
 
-      if (showToast) {
-        showToast(`Welcome back, ${user.name}!`, 'success');
-      }
-
-      if (user.role === 'STAFF') {
-        navigate('/staff', { replace: true });
-      } else if (user.role === 'ADMIN') {
+      // If administrator credentials entered, directly navigate to admin console
+      if (user.role === 'ADMIN') {
+        if (showToast) {
+          showToast(`Welcome, Administrator ${user.name}!`, 'success');
+        }
         navigate('/admin', { replace: true });
+      } else if (user.role === 'STAFF') {
+        if (showToast) {
+          showToast(`Authenticated as ${user.name} (Kitchen Staff)`, 'success');
+        }
+        navigate('/staff', { replace: true });
       } else {
+        if (showToast) {
+          showToast(`Welcome back, ${user.name}!`, 'success');
+        }
         const dest = location.state?.from;
         const isCustomerDest = dest && !dest.startsWith('/staff') && !dest.startsWith('/admin');
         navigate(isCustomerDest ? dest : '/', { replace: true });
@@ -85,159 +102,121 @@ export const CustomerLoginPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-[#261C14]">
-      <div className="max-w-md w-full">
-        {/* Navigation back to role selector */}
-        <div className="mb-4">
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#73675C] hover:text-[#3D5A2B] transition-colors"
+    <div className="w-full max-w-md animate-fade-in">
+      {/* Dark Card matching Homepage aesthetic */}
+      <div className="bg-[#1A1A1A]/95 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-8 sm:p-10 relative overflow-hidden">
+        {/* Soft Amber Glow behind the card */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#F59E0B]/10 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Clean Header: Just 'Log In' */}
+        <div className="text-center mb-8">
+          <h1 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            Log In
+          </h1>
+        </div>
+
+        {/* Error Notice Banner */}
+        {errorMessage && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-bold text-red-300">Authentication Failed</p>
+              <p className="text-red-400 mt-0.5 leading-relaxed">{errorMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Form: Mail and Password */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email Field */}
+          <div>
+            <label className="block text-xs font-bold text-white/90 mb-2">
+              Work Email <span className="text-[#F59E0B]">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/40">
+                <Mail className="w-4 h-4" />
+              </div>
+              <input
+                type="email"
+                id="customer-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="employee@company.com"
+                autoComplete="email"
+                required
+                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#121212] border border-white/15 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] transition-colors"
+                disabled={isSubmitting || authLoading}
+              />
+            </div>
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <label className="block text-xs font-bold text-white/90 mb-2">
+              Password <span className="text-[#F59E0B]">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/40">
+                <Lock className="w-4 h-4" />
+              </div>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="customer-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                required
+                className="w-full pl-10 pr-11 py-3 rounded-2xl bg-[#121212] border border-white/15 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] transition-colors"
+                disabled={isSubmitting || authLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-white/40 hover:text-white cursor-pointer"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            id="customer-login-submit"
+            disabled={isSubmitting || authLoading}
+            className={`w-full py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 mt-4 cursor-pointer active:scale-98 ${
+              isSubmitting || authLoading
+                ? 'bg-[#F59E0B]/70 text-[#121212] cursor-not-allowed'
+                : 'bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] hover:shadow-lg hover:shadow-[#F59E0B]/20'
+            }`}
           >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Switch Portal Selection</span>
+            {isSubmitting || authLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-[#121212]" />
+                <span>Verifying Credentials...</span>
+              </>
+            ) : (
+              <>
+                <span>Log In</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Switch to Register */}
+        <div className="mt-6 pt-6 border-t border-white/10 text-center text-xs text-white/50">
+          <span>Don't have an account? </span>
+          <Link
+            to="/register"
+            id="customer-register-link"
+            className="font-bold text-[#F59E0B] hover:text-[#D97706] hover:underline"
+          >
+            Create Account
           </Link>
-        </div>
-
-        {/* Card Container */}
-        <div className="bg-white rounded-3xl border border-[#EAE3D6] shadow-sm p-8 sm:p-10 relative overflow-hidden">
-          {/* Top Decorative accent banner in Olive */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#3D5A2B] via-[#507538] to-[#D48B18]" />
-
-          {/* Brand Header */}
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#3D5A2B] to-[#507538] text-white flex items-center justify-center mx-auto shadow-md mb-4 shadow-[#3D5A2B]/20">
-              <UtensilsCrossed className="w-7 h-7 stroke-[2.2]" />
-            </div>
-
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#EEF3E8] text-[#3D5A2B] border border-[#D4E0C9] mb-2">
-              Employee Food Ordering
-            </span>
-
-            <h1 className="text-2xl font-black text-[#261C14] tracking-tight">
-              Customer Sign In
-            </h1>
-            <p className="text-xs sm:text-sm text-[#73675C] mt-1.5">
-              Access your corporate canteen account and order tracking
-            </p>
-          </div>
-
-          {/* Redirect Notice Banner */}
-          {location.state?.from && !location.state?.roleMismatch && (
-            <div className="mb-5 bg-[#EEF3E8] border border-[#D4E0C9] rounded-2xl p-3.5 flex items-center gap-2.5 text-xs text-[#3D5A2B]">
-              <Sparkles className="w-4 h-4 shrink-0 text-[#D48B18]" />
-              <span>Please sign in to view your orders or complete your checkout.</span>
-            </div>
-          )}
-
-          {/* Error Banner */}
-          {errorMessage && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div className="text-xs">
-                <p className="font-bold text-red-800">Authentication Failed</p>
-                <p className="text-red-700 mt-0.5 leading-relaxed">{errorMessage}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
-            <div>
-              <label className="block text-xs font-bold text-[#261C14] mb-1.5">
-                Work Email <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#73675C]">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <input
-                  type="email"
-                  id="customer-email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="employee@company.com"
-                  autoComplete="email"
-                  required
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#FAF6EE] border border-[#EAE3D6] text-xs sm:text-sm text-[#261C14] focus:outline-none focus:border-[#3D5A2B] focus:ring-1 focus:ring-[#3D5A2B] transition-colors"
-                  disabled={isSubmitting || authLoading}
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-xs font-bold text-[#261C14] mb-1.5">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#73675C]">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="customer-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  required
-                  className="w-full pl-10 pr-11 py-3 rounded-2xl bg-[#FAF6EE] border border-[#EAE3D6] text-xs sm:text-sm text-[#261C14] focus:outline-none focus:border-[#3D5A2B] focus:ring-1 focus:ring-[#3D5A2B] transition-colors"
-                  disabled={isSubmitting || authLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#73675C] hover:text-[#261C14] cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              id="customer-login-submit"
-              disabled={isSubmitting || authLoading}
-              className={`w-full py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 mt-2 ${
-                isSubmitting || authLoading
-                  ? 'bg-[#3D5A2B]/70 text-white cursor-not-allowed'
-                  : 'bg-[#3D5A2B] hover:bg-[#2E4620] text-white hover:shadow-lg cursor-pointer active:scale-98'
-              }`}
-            >
-              {isSubmitting || authLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying Credentials...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In as Customer</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Switch to Register */}
-          <div className="mt-6 pt-6 border-t border-[#EAE3D6] text-center text-xs text-[#73675C]">
-            <span>Don't have an employee account? </span>
-            <Link
-              to="/register"
-              id="customer-register-link"
-              className="font-bold text-[#3D5A2B] hover:text-[#2E4620] hover:underline"
-            >
-              Create Account
-            </Link>
-          </div>
-        </div>
-
-        {/* Security Footer Note */}
-        <div className="mt-6 text-center text-[11px] text-[#73675C] flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#3D5A2B]" />
-          <span>OfficeBite Customer Authentication • Tower A Canteen</span>
         </div>
       </div>
     </div>

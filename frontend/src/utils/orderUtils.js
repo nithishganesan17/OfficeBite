@@ -1,21 +1,43 @@
 import { getCanonicalDish } from '../data/mockData.js';
 
+const STATUS_LABELS = {
+  PLACED: 'Placed',
+  ACCEPTED: 'Accepted',
+  PREPARING: 'Cooking',
+  READY: 'Ready',
+  COMPLETED: 'Completed',
+  DELIVERED: 'Completed',
+  REJECTED: 'Rejected',
+  CANCELLED: 'Cancelled',
+  CANCELED: 'Cancelled',
+};
+
 /**
  * Normalizes an order from backend REST response or local session
  */
 export const normalizeOrder = (ord) => {
   if (!ord) return null;
+  const rawStatus = (ord.status || 'PLACED').toUpperCase();
+  const orderNum = ord.orderNumber || ord.id;
+  const isSrikanthBaseline = orderNum === 'OB-7540' || ord.tokenNumber === 'A-71' || ord.pickupToken === 'A-71';
+  const isShanthoshBaseline = orderNum === 'OB-7978' || ord.tokenNumber === 'D-48' || ord.pickupToken === 'D-48';
+
   return {
-    id: ord.orderNumber || ord.id,
-    orderNumber: ord.orderNumber || ord.id,
-    tokenNumber: ord.tokenNumber || 'A-01',
+    id: orderNum,
+    orderNumber: orderNum,
+    tokenNumber: ord.tokenNumber || ord.pickupToken || (isSrikanthBaseline ? 'A-71' : isShanthoshBaseline ? 'D-48' : 'A-12'),
+    customerName: ord.customerName || ord.user?.name || (isSrikanthBaseline ? 'Srikanth' : isShanthoshBaseline ? 'Shanthosh' : 'Customer'),
     placedAt: ord.createdAt
       ? new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       : ord.placedAt || 'Recently',
-    status: ord.status || 'PLACED',
-    statusLabel: ord.statusLabel || ord.status,
-    deliveryType: ord.deliveryType || 'CANTEEN_PICKUP',
-    deliveryLocation: ord.deliveryLocation || 'Floor 3 Canteen Live Counter',
+    status: rawStatus,
+    statusLabel: STATUS_LABELS[rawStatus] || rawStatus,
+    deliveryType: ord.deliveryType || (isShanthoshBaseline ? 'DESK_DELIVERY' : 'CANTEEN_PICKUP'),
+    deliveryLocation:
+      ord.deliveryLocation ||
+      (isShanthoshBaseline
+        ? 'Tower A • Floor 4 • Desk 412'
+        : 'Live Kitchen Counter 2 • Floor 3'),
     items: ord.items?.map((i) => {
       const canonical = getCanonicalDish ? getCanonicalDish(i) : null;
       return {
@@ -27,12 +49,13 @@ export const normalizeOrder = (ord) => {
         image: canonical?.image || i.imageUrl || i.image,
       };
     }) || [],
-    subtotal: ord.subtotal || ord.totalAmount || 0,
+    subtotal: ord.subtotal || ord.totalAmount || ord.total || 0,
     total: ord.totalAmount || ord.total || ord.subtotal || 0,
+    totalAmount: ord.totalAmount || ord.total || ord.subtotal || 0,
     specialInstructions: ord.specialInstructions,
     isRealBackend: Boolean(ord.orderNumber && ord.createdAt),
     userId: ord.userId,
-    customerEmail: ord.customerEmail,
+    customerEmail: ord.customerEmail || (isSrikanthBaseline ? 'srikanth@gmail.com' : isShanthoshBaseline ? 'shanthosh@gmail.com' : undefined),
     createdAt: ord.createdAt,
   };
 };

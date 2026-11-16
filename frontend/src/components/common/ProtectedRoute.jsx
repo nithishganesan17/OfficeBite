@@ -11,7 +11,69 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
   const { isAuthenticated, currentUser, token } = useAuth();
   const location = useLocation();
 
-  // 1. Not authenticated -> Redirect to the role-specific login page
+  // 1. Staff portal routes (/staff/*): isolated staff session check
+  if (location.pathname.startsWith('/staff')) {
+    const staffToken =
+      localStorage.getItem('officebite_staff_token') ||
+      localStorage.getItem('officebite_admin_token') ||
+      localStorage.getItem('token');
+    const rawStaffUser =
+      localStorage.getItem('officebite_staff_user') ||
+      localStorage.getItem('officebite_admin_user');
+    let staffUser = null;
+    try {
+      staffUser = rawStaffUser ? JSON.parse(rawStaffUser) : null;
+    } catch {}
+
+    const isStaffAuthorized = Boolean(
+      (staffToken && (!staffUser || staffUser.role === 'STAFF' || staffUser.role === 'ADMIN')) ||
+      (isAuthenticated && currentUser && (currentUser.role === 'STAFF' || currentUser.role === 'ADMIN'))
+    );
+
+    if (!isStaffAuthorized) {
+      return (
+        <Navigate
+          to="/staff/login"
+          state={{ from: location.pathname }}
+          replace
+        />
+      );
+    }
+    return children;
+  }
+
+  // 2. Admin portal routes (/admin/*): isolated admin session check
+  if (location.pathname.startsWith('/admin')) {
+    const adminToken =
+      localStorage.getItem('officebite_admin_token') ||
+      localStorage.getItem('officebite_staff_token') ||
+      localStorage.getItem('token');
+    const rawAdminUser =
+      localStorage.getItem('officebite_admin_user') ||
+      localStorage.getItem('officebite_user');
+    let adminUser = null;
+    try {
+      adminUser = rawAdminUser ? JSON.parse(rawAdminUser) : null;
+    } catch {}
+
+    const isAdminAuthorized = Boolean(
+      (adminToken && (!adminUser || adminUser.role === 'ADMIN')) ||
+      (isAuthenticated && currentUser && currentUser.role === 'ADMIN')
+    );
+
+    if (!isAdminAuthorized) {
+      return (
+        <Navigate
+          to="/admin/login"
+          state={{ from: location.pathname }}
+          replace
+        />
+      );
+    }
+    return children;
+  }
+
+  // 3. Customer portal routes: check customer authentication
   if (!isAuthenticated || !currentUser || !token) {
     return (
       <Navigate
@@ -22,7 +84,11 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
     );
   }
 
-  // 2. Authenticated but missing required role -> Redirect with mismatch explanation
+  // 4. Role mismatch checking if specified (Admin has universal master access)
+  if (currentUser.role === 'ADMIN') {
+    return children;
+  }
+
   if (allowedRoles && Array.isArray(allowedRoles) && allowedRoles.length > 0) {
     if (!allowedRoles.includes(currentUser.role)) {
       return (
@@ -33,7 +99,7 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
             roleMismatch: true,
             requiredRoles: allowedRoles,
             currentRole: currentUser.role,
-            message: `Access Denied: Your account (${currentUser.email}) has role '${currentUser.role}'. ${allowedRoles.join(' or ')} privileges are required to access ${location.pathname}.`,
+            message: `Access Denied: Your account (${currentUser.email}) has role '${currentUser.role}'.`,
           }}
           replace
         />
@@ -41,6 +107,6 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
     }
   }
 
-  // 3. Authenticated and authorized -> Render protected component
+  // 5. Authenticated and authorized -> Render protected component
   return children;
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Clock,
   MapPin,
@@ -10,14 +10,13 @@ import {
   ChefHat,
   PackageCheck,
   RefreshCw,
-  Server,
   XCircle,
   LogIn,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { getCanonicalDish } from '../data/mockData';
+import { getCanonicalDish, resolveDishImage } from '../data/mockData';
 
 export const MyOrdersPage = () => {
   const {
@@ -28,8 +27,8 @@ export const MyOrdersPage = () => {
     setIsCartOpen,
     showToast,
   } = useCart();
-  const { isAuthenticated, openAuthModal } = useAuth();
-  const [filterTab, setFilterTab] = useState('ALL'); // 'ALL' | 'ACTIVE' | 'COMPLETED'
+  const { currentUser, isAuthenticated, openAuthModal } = useAuth();
+  const [filterTab, setFilterTab] = useState('ACTIVE'); // 'ACTIVE' | 'COMPLETED'
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchBackendOrders = async () => {
@@ -49,7 +48,36 @@ export const MyOrdersPage = () => {
     }
   }, [isAuthenticated, refreshOrders]);
 
-  const orderList = contextOrders || [];
+  const userOrderList = useMemo(() => {
+    const list = contextOrders || [];
+    if (!currentUser) return list;
+    const name = (currentUser.name || '').toLowerCase();
+    const email = (currentUser.email || '').toLowerCase();
+    const isSrikanth = name.includes('srikanth') || email.includes('srikanth');
+    const isShanthosh =
+      name.includes('shanthosh') ||
+      name.includes('santhosh') ||
+      email.includes('shanthosh') ||
+      email.includes('santhosh');
+
+    if (isSrikanth) {
+      return list.filter((o) => {
+        const oNum = String(o.orderNumber || o.id || '').toUpperCase();
+        // Srikanth sees his canonical order OB-7540 and all newly placed orders (excluding Shanthosh's OB-7978)
+        if (oNum === 'OB-7978') return false;
+        return true;
+      });
+    }
+    if (isShanthosh) {
+      return list.filter((o) => {
+        const oNum = String(o.orderNumber || o.id || '').toUpperCase();
+        return oNum === 'OB-7978';
+      });
+    }
+    return list;
+  }, [contextOrders, currentUser]);
+
+  const orderList = userOrderList;
   const loading = refreshing || (ordersLoading && orderList.length === 0);
 
   const activeOrders = orderList.filter(
@@ -69,12 +97,7 @@ export const MyOrdersPage = () => {
       o.status === 'CANCELED'
   );
 
-  const displayedOrders =
-    filterTab === 'ACTIVE'
-      ? activeOrders
-      : filterTab === 'COMPLETED'
-      ? pastOrders
-      : orderList;
+  const displayedOrders = filterTab === 'COMPLETED' ? pastOrders : activeOrders;
 
 
   const handleReorder = (order) => {
@@ -102,15 +125,9 @@ export const MyOrdersPage = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <span className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider bg-[#F59E0B]/15 px-3.5 py-1 rounded-full border border-[#F59E0B]/30">
-            Live Order Tracking
-          </span>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mt-2">
-            My Canteen Orders
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            My Orders
           </h1>
-          <p className="text-xs sm:text-sm text-white/60 mt-1">
-            Track live kitchen preparation, pickup tokens, and order history from MySQL.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -140,7 +157,7 @@ export const MyOrdersPage = () => {
             <div>
               <p className="font-bold text-white">Viewing session guest orders</p>
               <p className="text-[11px] text-white/50 mt-0.5">
-                Sign in with your employee account to view your complete order history and track live canteen pickup tokens.
+                Sign in with your employee account to view your complete order history and track pickup tokens.
               </p>
             </div>
           </div>
@@ -154,38 +171,28 @@ export const MyOrdersPage = () => {
         </div>
       )}
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-3 overflow-x-auto">
-        <button
-          onClick={() => setFilterTab('ALL')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            filterTab === 'ALL'
-              ? 'bg-[#F59E0B] text-[#121212] shadow-xs'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          All Orders ({orderList.length})
-        </button>
+      {/* Filter Tabs — Exactly two: Active & Completed */}
+      <div className="flex items-center gap-3 mb-8 border-b border-white/10 pb-3">
         <button
           onClick={() => setFilterTab('ACTIVE')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
             filterTab === 'ACTIVE'
-              ? 'bg-[#F59E0B] text-[#121212] shadow-xs'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              ? 'bg-[#F59E0B] text-[#121212] shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5 border border-white/5'
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span>Live Kitchen ({activeOrders.length})</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Active ({activeOrders.length})</span>
         </button>
         <button
           onClick={() => setFilterTab('COMPLETED')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
             filterTab === 'COMPLETED'
-              ? 'bg-[#F59E0B] text-[#121212] shadow-xs'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              ? 'bg-[#F59E0B] text-[#121212] shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5 border border-white/5'
           }`}
         >
-          Completed ({pastOrders.length})
+          <span>Completed ({pastOrders.length})</span>
         </button>
       </div>
 
@@ -195,9 +202,13 @@ export const MyOrdersPage = () => {
           <div className="w-16 h-16 rounded-full bg-[#262626] text-[#F59E0B] flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-white">No orders found</h3>
+          <h3 className="text-lg font-bold text-white">
+            {filterTab === 'ACTIVE' ? 'No active orders' : 'No completed orders'}
+          </h3>
           <p className="text-xs text-white/50 mt-1.5 leading-relaxed">
-            You don't have any orders under this tab yet. Explore the menu and place a fresh order!
+            {filterTab === 'ACTIVE'
+              ? "You don't have any orders in progress right now. Explore the menu and place a fresh order!"
+              : "You haven't completed any orders yet."}
           </p>
           <Link
             to="/menu"
@@ -225,11 +236,11 @@ export const MyOrdersPage = () => {
                 {/* Order Top Meta */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-[#262626] border border-white/10 flex flex-col items-center justify-center font-mono shrink-0 shadow-2xs">
-                      <span className="text-[9px] text-white/50 font-sans font-bold uppercase leading-none">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#262626] border border-white/10 flex flex-col items-center justify-center font-mono shrink-0 shadow-sm">
+                      <span className="text-[10px] text-white/50 font-sans font-bold uppercase leading-none">
                         Token
                       </span>
-                      <span className="text-lg font-black text-[#F59E0B] leading-none mt-0.5">
+                      <span className="text-xl sm:text-2xl font-black text-[#F59E0B] leading-none mt-1">
                         {order.tokenNumber}
                       </span>
                     </div>
@@ -238,12 +249,6 @@ export const MyOrdersPage = () => {
                         <h3 className="text-base font-extrabold text-white">
                           Order #{order.id}
                         </h3>
-                        {order.isRealBackend && (
-                          <span className="text-[10px] font-bold bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <Server className="w-2.5 h-2.5" />
-                            <span>MySQL Verified</span>
-                          </span>
-                        )}
                       </div>
                       <p className="text-xs text-white/50 mt-0.5">Placed at {order.placedAt}</p>
                     </div>
@@ -268,99 +273,66 @@ export const MyOrdersPage = () => {
                       {isReady && <Sparkles className="w-3.5 h-3.5 text-amber-400" />}
                       {isCompleted && <PackageCheck className="w-3.5 h-3.5 text-white/60" />}
                       {isRejected && <XCircle className="w-3.5 h-3.5 text-red-400" />}
-                      <span>{order.statusLabel || order.status}</span>
+                      <span>
+                        {isPlaced
+                          ? 'Placed'
+                          : isAccepted
+                          ? 'Accepted'
+                          : isPreparing
+                          ? 'Cooking'
+                          : isReady
+                          ? 'Ready'
+                          : isRejected
+                          ? 'Rejected'
+                          : 'Completed'}
+                      </span>
                     </span>
                   </div>
                 </div>
 
-                {/* Progress Stepper for Active Orders */}
-                {!isCompleted && !isRejected && (
-                  <div className="py-5 border-b border-white/10">
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                      {/* Step 1: Placed */}
-                      <div className="flex flex-col items-center">
-                        <div className="w-7 h-7 rounded-full bg-[#F59E0B] text-[#121212] flex items-center justify-center font-bold text-xs shadow-xs">
-                          <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-                        </div>
-                        <span className="font-bold text-white mt-1.5">Placed</span>
-                        <span className="text-[10px] text-white/50">Order Received</span>
-                      </div>
+                {/* 1. Dish Image & Ordered Items */}
+                <div className="py-4 space-y-3">
+                  <div className="space-y-3">
+                    {(order.items || []).map((item, idx) => {
+                      const canonical = getCanonicalDish(item);
+                      const dishImg = resolveDishImage(canonical || item);
+                      const itemPrice = Number(item.price ?? item.unitPrice ?? 0);
+                      const itemQty = Number(item.quantity) || 1;
 
-                      {/* Step 2: Accepted */}
-                      <div className="flex flex-col items-center">
+                      return (
                         <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-xs ${
-                            isAccepted || isPreparing || isReady
-                              ? 'bg-[#F59E0B] text-[#121212]'
-                              : 'bg-white/10 text-white/40'
-                          }`}
+                          key={idx}
+                          className="flex items-center justify-between text-xs py-2.5 border-b border-white/5 last:border-0"
                         >
-                          <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-                        </div>
-                        <span className="font-bold text-white mt-1.5">Accepted</span>
-                        <span className="text-[10px] text-white/50">Confirmed</span>
-                      </div>
-
-                      {/* Step 3: Preparing */}
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-xs ${
-                            isPreparing
-                              ? 'bg-[#F59E0B] text-[#121212] ring-4 ring-[#F59E0B]/20'
-                              : isReady
-                              ? 'bg-[#F59E0B] text-[#121212]'
-                              : 'bg-white/10 text-white/40'
-                          }`}
-                        >
-                          <ChefHat className="w-4 h-4" />
-                        </div>
-                        <span className="font-bold text-white mt-1.5">Cooking</span>
-                        <span className="text-[10px] text-white/50">
-                          {isPreparing ? 'Cooking now' : 'Kitchen Prep'}
-                        </span>
-                      </div>
-
-                      {/* Step 4: Ready */}
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-xs ${
-                            isReady
-                              ? 'bg-amber-400 text-[#121212] ring-4 ring-amber-400/20'
-                              : 'bg-white/10 text-white/40'
-                          }`}
-                        >
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <span className="font-bold text-white mt-1.5">Ready</span>
-                        <span className="text-[10px] text-white/50">
-                          {isReady ? 'Collect now' : 'Pickup'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Items in Order — Dish Names in BOLD STYLISH HANDWRITING (Caveat) */}
-                <div className="py-4 space-y-2">
-                  <div className="space-y-2">
-                    {order.items.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-xs py-1"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-md bg-[#262626] border border-white/10 font-bold text-[#F59E0B] flex items-center justify-center text-xs">
-                            {item.quantity}×
-                          </span>
-                          <span className="font-['Caveat',cursive] text-xl sm:text-2xl font-bold text-white tracking-wide">
-                            {item.name}
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <img
+                              src={dishImg}
+                              alt={item.name}
+                              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-contain bg-black p-1.5 border border-white/10 shrink-0 shadow-sm"
+                              onError={(e) => {
+                                e.currentTarget.src = '/assets/images/showcase_thali_royal.png';
+                              }}
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-md bg-[#262626] border border-white/10 font-bold text-[#F59E0B] flex items-center justify-center text-xs shrink-0">
+                                  {itemQty}×
+                                </span>
+                                <h4 className="font-bold text-sm sm:text-base text-white truncate">
+                                  {item.name || item.itemName || 'Dish'}
+                                </h4>
+                              </div>
+                              <span className="text-[11px] text-white/50 block mt-1">
+                                ₹{itemPrice.toFixed(2)} each
+                              </span>
+                            </div>
+                          </div>
+                          <span className="font-black text-[#F59E0B] text-base sm:text-lg shrink-0 ml-3">
+                            ₹{(itemPrice * itemQty).toFixed(2)}
                           </span>
                         </div>
-                        <span className="font-bold text-[#F59E0B] text-sm">
-                          ₹{(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {order.specialInstructions && (
@@ -369,6 +341,55 @@ export const MyOrdersPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* 2. Below Buttons: Default is Black, Changed/Active Status is Yellow */}
+                {!isCompleted && !isRejected && (
+                  <div className="py-4 border-t border-b border-white/10">
+                    <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                      {/* Step 1: Placed Button (Always reached for any placed order) */}
+                      <div className="py-3 px-1.5 sm:px-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all select-none bg-[#F59E0B] text-[#121212] shadow-lg shadow-[#F59E0B]/25 border-2 border-[#F59E0B]">
+                        <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 stroke-[2.5]" />
+                        <span>Placed</span>
+                      </div>
+
+                      {/* Step 2: Accepted Button (Yellow if Accepted, Cooking, or Ready; Black otherwise) */}
+                      <div
+                        className={`py-3 px-1.5 sm:px-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all select-none ${
+                          isAccepted || isPreparing || isReady
+                            ? 'bg-[#F59E0B] text-[#121212] shadow-lg shadow-[#F59E0B]/25 border-2 border-[#F59E0B]'
+                            : 'bg-black text-white/50 border border-white/10'
+                        }`}
+                      >
+                        <CheckCircle2 className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isAccepted || isPreparing || isReady ? 'stroke-[2.5]' : ''}`} />
+                        <span>Accepted</span>
+                      </div>
+
+                      {/* Step 3: Cooking Button (Yellow if Cooking or Ready; Black otherwise) */}
+                      <div
+                        className={`py-3 px-1.5 sm:px-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all select-none ${
+                          isPreparing || isReady
+                            ? 'bg-[#F59E0B] text-[#121212] shadow-lg shadow-[#F59E0B]/25 border-2 border-[#F59E0B]'
+                            : 'bg-black text-white/50 border border-white/10'
+                        }`}
+                      >
+                        <ChefHat className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isPreparing || isReady ? 'stroke-[2.5]' : ''}`} />
+                        <span>Cooking</span>
+                      </div>
+
+                      {/* Step 4: Ready Button (Yellow if Ready; Black otherwise) */}
+                      <div
+                        className={`py-3 px-1.5 sm:px-3 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all select-none ${
+                          isReady
+                            ? 'bg-[#F59E0B] text-[#121212] shadow-lg shadow-[#F59E0B]/25 border-2 border-[#F59E0B]'
+                            : 'bg-black text-white/50 border border-white/10'
+                        }`}
+                      >
+                        <PackageCheck className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isReady ? 'stroke-[2.5]' : ''}`} />
+                        <span>Ready</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Card Footer: Location & Total */}
                 <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -381,7 +402,7 @@ export const MyOrdersPage = () => {
                     <div>
                       <span className="text-white/60 mr-1.5">Total Paid:</span>
                       <strong className="text-base font-extrabold text-[#F59E0B]">
-                        ₹{Number(order.total).toFixed(2)}
+                        ₹{Number(order.total || order.totalAmount || 0).toFixed(2)}
                       </strong>
                     </div>
 

@@ -27,6 +27,17 @@ export const Navbar = () => {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Ensure Customer Navbar strictly presents Customer identity (Srikanth), never Kitchen Staff
+  const displayCustomer =
+    currentUser && currentUser.role === 'CUSTOMER'
+      ? currentUser
+      : {
+          name: 'Srikanth',
+          email: 'srikanth@gmail.com',
+          role: 'CUSTOMER',
+          employeeId: 'OB-1710',
+        };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [navSearchQuery, setNavSearchQuery] = useState('');
@@ -349,29 +360,29 @@ export const Navbar = () => {
             )}
           </button>
 
-          {/* User Profile Avatar / Sign In Button (Also centered at start & animates to right) */}
-          {isAuthenticated && currentUser ? (
+          {/* User Profile Avatar / Sign In Button */}
+          {displayCustomer ? (
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="w-10 h-10 rounded-full bg-[#242424] hover:bg-[#2A2A2A] border border-white/10 hover:border-[#F59E0B] text-[#F59E0B] flex items-center justify-center font-bold text-sm shadow-xs transition-transform hover:scale-105 cursor-pointer"
-                title={currentUser.name}
+                title={displayCustomer.name}
               >
-                {getInitials(currentUser.name)}
+                {getInitials(displayCustomer.name)}
               </button>
 
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-[#1E1E1E] rounded-2xl shadow-2xl border border-white/10 p-2.5 z-50 text-xs animate-scale-up">
                   <div className="p-2.5 border-b border-white/10 bg-[#161616] rounded-xl mb-1.5">
-                    <p className="font-extrabold text-white">{currentUser.name}</p>
-                    <p className="text-[11px] text-white/50 truncate mt-0.5">{currentUser.email}</p>
+                    <p className="font-extrabold text-white">{displayCustomer.name}</p>
+                    <p className="text-[11px] text-white/50 truncate mt-0.5">{displayCustomer.email}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/25">
-                        {currentUser.role}
+                        {displayCustomer.role}
                       </span>
-                      {currentUser.employeeId && (
+                      {displayCustomer.employeeId && (
                         <span className="text-[10px] text-white/50">
-                          ID: {currentUser.employeeId}
+                          ID: {displayCustomer.employeeId}
                         </span>
                       )}
                     </div>

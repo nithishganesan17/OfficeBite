@@ -74,8 +74,8 @@ export const FoodCard = ({ dish }) => {
         {/* Content Area */}
         <div className="p-5 flex-1 flex flex-col justify-between bg-[#1A1A1A]">
           <div>
-            {/* DISH NAME IN BOLD STYLISH HANDWRITING (Caveat font) */}
-            <h3 className="font-['Caveat',cursive] text-2xl sm:text-[26px] font-bold text-white group-hover:text-[#F59E0B] transition-colors leading-snug line-clamp-1 tracking-wide">
+            {/* DISH NAME IN CLEAN NORMAL FONT STYLE */}
+            <h3 className="font-bold text-lg sm:text-xl text-white group-hover:text-[#F59E0B] transition-colors leading-snug line-clamp-1">
               {dish.name}
             </h3>
             <p className="text-xs text-white/60 mt-1 leading-relaxed line-clamp-2">

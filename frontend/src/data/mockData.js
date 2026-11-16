@@ -762,6 +762,42 @@ export const resolveDishImage = (input) => {
   return '/assets/images/showcase_thali_royal.png';
 };
 
+export const SHOWCASE_CANONICAL_MAP = {
+  'showcase-masala-dosa': 'dish-5',
+  'showcase-paneer-tikka': 'dish-3',
+  'showcase-steamed-idli': 'dish-8',
+  'showcase-thali-deluxe': 'dish-1',
+  'showcase-biryani': 'dish-9',
+  'showcase-paneer-dosa': 'dish-6',
+  'showcase-samosa': 'dish-16',
+  'showcase-rice-bowl': 'dish-11',
+  'showcase-rajma-chawal': 'dish-12',
+  'showcase-veg-biryani': 'dish-10',
+  'showcase-sandwich': 'dish-14',
+  'showcase-coffee': 'dish-18',
+  'showcase-juice': 'dish-20',
+  'showcase-watermelon': 'dish-21',
+  'showcase-thali-royal': 'dish-1',
+};
+
+const NAME_CANONICAL_MAP = {
+  'golden crispy masala dosa': 'dish-5',
+  'tandoori paneer tikka platter': 'dish-3',
+  'royal steamed idli platter': 'dish-8',
+  'royal north indian thali': 'dish-1',
+  'heritage royal thali feast': 'dish-1',
+  'royal chicken dum biryani': 'dish-9',
+  'royal veg dum biryani': 'dish-9',
+  'artisan paneer bhurji dosa': 'dish-6',
+  'crispy punjabi samosa platter': 'dish-16',
+  'royal jeera rice bowl': 'dish-11',
+  'punjabi rajma chawal bowl': 'dish-12',
+  'artisan club sandwich platter': 'dish-14',
+  'degree kumbakonam filter coffee': 'dish-18',
+  'fresh cold-pressed valencia juice': 'dish-20',
+  'watermelon mint hydration cooler': 'dish-21',
+};
+
 /**
  * Resolves any dish item (or name/synthetic ID) to its authoritative canonical dish from the catalog.
  * Guarantees that canonical MySQL dish IDs ('dish-1', 'dish-20', etc.) are used everywhere,
@@ -770,22 +806,43 @@ export const resolveDishImage = (input) => {
 export const getCanonicalDish = (item) => {
   if (!item) return null;
 
-  // 1. Direct ID match if it's already a valid canonical ID
   const directId = item.menuItemId || item.id;
-  if (directId && typeof directId === 'string' && directId.startsWith('dish-') && !directId.includes('reorder')) {
-    const found = MENU_ITEMS.find((d) => d.id === directId);
+  if (directId && typeof directId === 'string') {
+    // 1. Direct ID match if it's already a valid canonical ID
+    if (directId.startsWith('dish-') && !directId.includes('reorder')) {
+      const found = MENU_ITEMS.find((d) => d.id === directId);
+      if (found) {
+        const resolvedImg = resolveDishImage(found);
+        return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+      }
+    }
+
+    // 2. Showcase synthetic ID mapping
+    if (SHOWCASE_CANONICAL_MAP[directId]) {
+      const canonicalId = SHOWCASE_CANONICAL_MAP[directId];
+      const found = MENU_ITEMS.find((d) => d.id === canonicalId);
+      if (found) {
+        const resolvedImg = resolveDishImage(found);
+        return { ...found, image: resolvedImg, imageUrl: resolvedImg };
+      }
+    }
+  }
+
+  // 3. Extract clean name to match
+  const rawName = (item.name || item.itemName || (typeof item === 'string' ? item : '')).trim();
+  if (!rawName) return null;
+  const lowerName = rawName.toLowerCase();
+
+  // Try alias map
+  if (NAME_CANONICAL_MAP[lowerName]) {
+    const found = MENU_ITEMS.find((d) => d.id === NAME_CANONICAL_MAP[lowerName]);
     if (found) {
       const resolvedImg = resolveDishImage(found);
       return { ...found, image: resolvedImg, imageUrl: resolvedImg };
     }
   }
 
-  // 2. Extract clean name to match
-  const rawName = (item.name || item.itemName || (typeof item === 'string' ? item : '')).trim();
-  if (!rawName) return null;
-  const lowerName = rawName.toLowerCase();
-
-  // Try exact match first
+  // Try exact match in MENU_ITEMS
   let found = MENU_ITEMS.find((d) => d.name.toLowerCase() === lowerName);
   if (found) {
     const resolvedImg = resolveDishImage(found);
@@ -828,6 +885,28 @@ export const getCanonicalDish = (item) => {
     }
   }
 
+  // Keyword fallbacks
+  if (lowerName.includes('dosa')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-5');
+    if (found) return { ...found, image: resolveDishImage(found), imageUrl: resolveDishImage(found) };
+  }
+  if (lowerName.includes('tikka') || lowerName.includes('paneer')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-3');
+    if (found) return { ...found, image: resolveDishImage(found), imageUrl: resolveDishImage(found) };
+  }
+  if (lowerName.includes('idli')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-8');
+    if (found) return { ...found, image: resolveDishImage(found), imageUrl: resolveDishImage(found) };
+  }
+  if (lowerName.includes('biryani')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-9');
+    if (found) return { ...found, image: resolveDishImage(found), imageUrl: resolveDishImage(found) };
+  }
+  if (lowerName.includes('thali')) {
+    found = MENU_ITEMS.find((d) => d.id === 'dish-1');
+    if (found) return { ...found, image: resolveDishImage(found), imageUrl: resolveDishImage(found) };
+  }
+
   return null;
 };
 
@@ -842,7 +921,8 @@ export const getCanonicalDish = (item) => {
  */
 export const HOMEPAGE_SIGNATURE_DISHES = [
   {
-    id: 'showcase-paneer-tikka',
+    id: 'dish-3',
+    showcaseId: 'showcase-paneer-tikka',
     name: 'Tandoori Paneer Tikka Platter',
     badge: 'Tandoor Signature',
     rating: 4.8,
@@ -858,7 +938,8 @@ export const HOMEPAGE_SIGNATURE_DISHES = [
     isVeg: true,
   },
   {
-    id: 'showcase-masala-dosa',
+    id: 'dish-5',
+    showcaseId: 'showcase-masala-dosa',
     name: 'Golden Crispy Masala Dosa',
     badge: 'South Indian Classic',
     rating: 4.9,
@@ -874,7 +955,8 @@ export const HOMEPAGE_SIGNATURE_DISHES = [
     isVeg: true,
   },
   {
-    id: 'showcase-steamed-idli',
+    id: 'dish-8',
+    showcaseId: 'showcase-steamed-idli',
     name: 'Royal Steamed Idli Platter',
     badge: 'Morning Special',
     rating: 4.9,
@@ -890,7 +972,8 @@ export const HOMEPAGE_SIGNATURE_DISHES = [
     isVeg: true,
   },
   {
-    id: 'showcase-thali-deluxe',
+    id: 'dish-1',
+    showcaseId: 'showcase-thali-deluxe',
     name: 'Royal North Indian Thali',
     badge: "Chef's Royal Thali",
     rating: 4.9,
@@ -906,7 +989,8 @@ export const HOMEPAGE_SIGNATURE_DISHES = [
     isVeg: true,
   },
   {
-    id: 'showcase-biryani',
+    id: 'dish-9',
+    showcaseId: 'showcase-biryani',
     name: 'Royal Chicken Dum Biryani',
     badge: "Chef's Signature",
     rating: 4.9,

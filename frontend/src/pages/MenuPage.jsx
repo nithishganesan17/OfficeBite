@@ -893,14 +893,14 @@ export const MenuPage = () => {
                         </div>
                       )}
 
-                      {/* Food Title — Elegant Luxury Serif Typography */}
-                      <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-tight drop-shadow-sm">
+                      {/* Food Title — Clean Bold Modern Typography */}
+                      <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight drop-shadow-sm">
                         {currentDish.name}
                       </h1>
 
                       {/* Price Display & Add to My Plate Button (Zero content below this line) */}
                       <div className="flex flex-wrap items-center gap-4 pt-1">
-                        <span className="text-3xl sm:text-4xl font-extrabold text-[#F59E0B]">
+                        <span className="font-sans text-3xl sm:text-4xl font-black text-[#F59E0B] tracking-tight">
                           ₹{currentDish.price}
                         </span>
 
@@ -997,7 +997,7 @@ export const MenuPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
-            <h2 className="font-['Playfair_Display',serif] text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h2 className="font-sans text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {varietiesHeading}
             </h2>
             {selectedCategory !== 'all' && (
@@ -1097,14 +1097,14 @@ export const MenuPage = () => {
                         </div>
                       )}
 
-                      {/* Dish Title — Bolder, Larger, High Contrast, No Unwanted Truncation */}
-                      <h3 className="font-['Playfair_Display',serif] text-lg sm:text-xl lg:text-[22px] font-extrabold text-white leading-snug line-clamp-2 max-w-[270px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">
+                      {/* Dish Title — Clean Bold Modern Sans-Serif Typography */}
+                      <h3 className="font-sans text-lg sm:text-xl font-bold text-white leading-snug line-clamp-2 max-w-[270px]">
                         {dish.name}
                       </h3>
 
                       {/* Price & Add to Plate Button */}
                       <div className="mt-2.5 flex items-center justify-center gap-3">
-                        <span className="font-['Playfair_Display',serif] font-extrabold text-xl sm:text-2xl text-[#F59E0B] tracking-tight drop-shadow-sm">
+                        <span className="font-sans font-black text-xl sm:text-2xl text-[#F59E0B] tracking-tight">
                           ₹{dish.price}
                         </span>
 

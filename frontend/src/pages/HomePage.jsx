@@ -17,24 +17,6 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { getMenuCatalog } from '../services/api';
 
-/**
- * Premium OfficeBite Customer HomePage — Dark Steakhouse-Inspired Theme.
- * Palette:
- * - Matte dark charcoal background: #121212 / #181818
- * - On scroll: changes smoothly to light black with blur (bg-[#181818]/85 backdrop-blur-md)
- * - Brand typography:
- *   - "OfficeBite": Bold, stylish handwriting (Dancing Script cursive) in warm gold
- *   - Headlines: Bold luxury serif (Playfair Display)
- *   - Menu & order dish names: Bold stylish handwriting (Caveat cursive)
- * - Hero biryani: Open presentation (no frame/border), stationary and stable (no rotation)
- */
-/**
- * AnimateOnScrollDown
- * Re-triggers entrance animations WHENEVER the user scrolls down into an element.
- * Never animates when scrolling up (keeps elements visible).
- * Silently resets elements when they scroll completely below the viewport,
- * so whenever the user scrolls down again, the animation re-triggers seamlessly.
- */
 const AnimateOnScrollDown = ({
   children,
   className = '',
@@ -60,12 +42,8 @@ const AnimateOnScrollDown = ({
       if (rect.top <= windowHeight * threshold && rect.bottom >= 0) {
         setIsVisible(true);
       } else if (rect.top > windowHeight) {
-        // Element is completely BELOW the screen (user scrolled up past it)
-        // Reset to initial state offscreen so it re-animates next time user scrolls down
         setIsVisible(false);
       }
-      // Note: When rect.bottom < 0 (element is ABOVE the screen, scrolled past downwards):
-      // Keep isVisible true so that when user scrolls UP, it remains visible without re-animating!
     };
 
     check();
@@ -306,7 +284,7 @@ export const HomePage = () => {
                 Indulge in authentic royal recipes: slow-cooked gravies, golden ghee-roasted dosas, aromatic dum biryanis in sizzling iron skillets, and degree filter coffee.
               </motion.p>
 
-              {/* Call-to-action Buttons */}
+              {/* Call-to-action Buttons — Clean rounded button pills in a single line */}
               <motion.div
                 variants={{
                   hidden: { opacity: 0, y: 24, filter: 'blur(5px)' },
@@ -317,33 +295,41 @@ export const HomePage = () => {
                     transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
                   },
                 }}
-                className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+                className="pt-2 flex flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-3 flex-nowrap overflow-x-auto no-scrollbar"
               >
+                {/* 1. Order Now Button */}
                 <button
                   type="button"
                   onClick={handleOrderNowClick}
-                  className="w-full sm:w-auto px-8 py-3.5 border border-white/60 hover:border-[#F59E0B] text-white hover:text-[#F59E0B] font-semibold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer bg-white/5 hover:bg-white/10"
+                  className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm tracking-wider uppercase shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap shrink-0"
                 >
                   <span>Order Now</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2]" />
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
 
+                {/* 2. Menu Button */}
                 <Link
                   to="/menu"
-                  className="w-full sm:w-auto px-7 py-3.5 bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm tracking-wider uppercase shadow-lg shadow-[#F59E0B]/25 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#1E1E1E] hover:bg-[#282828] text-white border border-white/15 hover:border-white/30 font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-sm"
                 >
-                  <Utensils className="w-4 h-4" />
-                  <span>Explore Menu</span>
+                  <Utensils className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  <span>Menu</span>
                 </Link>
 
-                {activeOrdersCount > 0 && (
-                  <Link
-                    to="/orders"
-                    className="w-full sm:w-auto px-5 py-3.5 bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 text-[#F59E0B] border border-[#F59E0B]/30 font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>My Active Orders ({activeOrdersCount})</span>
-                  </Link>
-                )}
+                {/* 3. Active Order Button */}
+                <Link
+                  to="/orders"
+                  className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-sm ${
+                    activeOrdersCount > 0
+                      ? 'bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 text-[#F59E0B] border border-[#F59E0B]/40 shadow-xs'
+                      : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 hover:border-white/30'
+                  }`}
+                >
+                  {activeOrdersCount > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  )}
+                  <span>Active Order {activeOrdersCount > 0 ? `(${activeOrdersCount})` : ''}</span>
+                </Link>
               </motion.div>
             </AnimateOnScrollDown>
 
@@ -948,9 +934,3 @@ export const HomePage = () => {
 };
 
 export default HomePage;
-
-
-
-
-
-

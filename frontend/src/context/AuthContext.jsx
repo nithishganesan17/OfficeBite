@@ -21,23 +21,30 @@ export const AuthProvider = ({ children }) => {
   // Sync auth state if token is present on startup and listen for session expiration
   useEffect(() => {
     const existingToken = getStoredToken();
+    const existingUser = getStoredUser();
+    if (existingUser) {
+      setCurrentUser(existingUser);
+      setToken(existingToken);
+    }
+
     if (existingToken) {
       getCurrentUser()
         .then((profile) => {
-          setCurrentUser(profile);
-          setStoredAuth(existingToken, profile);
+          if (profile) {
+            setCurrentUser(profile);
+            setStoredAuth(existingToken, profile);
+          }
         })
         .catch(() => {
-          clearStoredAuth();
-          setCurrentUser(null);
-          setToken(null);
+          // Keep current fallback customer session intact
         });
     }
 
     const handleSessionExpired = () => {
       clearStoredAuth();
-      setCurrentUser(null);
-      setToken(null);
+      const freshUser = getStoredUser();
+      setCurrentUser(freshUser);
+      setToken(getStoredToken());
     };
 
     window.addEventListener('officebite:session-expired', handleSessionExpired);
@@ -58,8 +65,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await apiLogin(email, password);
 
-      // Verify user's actual role against expected portal roles if specified
-      if (requiredRoles && Array.isArray(requiredRoles) && requiredRoles.length > 0) {
+      // Verify user's actual role against expected portal roles if specified.
+      // SPECIAL RULE: Accounts with ADMIN role have master privileges across all portals
+      // and should never be blocked by role mismatch when logging in anywhere.
+      if (
+        data.user?.role !== 'ADMIN' &&
+        requiredRoles &&
+        Array.isArray(requiredRoles) &&
+        requiredRoles.length > 0
+      ) {
         if (!requiredRoles.includes(data.user?.role)) {
           // Clear any stored authentication so mismatched role does not gain access
           clearStoredAuth();

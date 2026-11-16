@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   X,
   Mail,
@@ -16,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
 export const AuthModal = () => {
+  const navigate = useNavigate();
   const {
     authModalOpen,
     authModalTab,
@@ -60,11 +62,25 @@ export const AuthModal = () => {
 
     try {
       const user = await loginUser(loginEmail.trim(), loginPassword);
-      if (showToast) {
-        showToast(`Welcome back, ${user.name}!`, 'success');
-      }
       setLoginEmail('');
       setLoginPassword('');
+
+      // Universal master redirection for admin or staff
+      if (user.role === 'ADMIN') {
+        if (showToast) {
+          showToast(`Welcome, Administrator ${user.name}!`, 'success');
+        }
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'STAFF') {
+        if (showToast) {
+          showToast(`Authenticated as ${user.name} (Kitchen Staff)`, 'success');
+        }
+        navigate('/staff', { replace: true });
+      } else {
+        if (showToast) {
+          showToast(`Welcome back, ${user.name}!`, 'success');
+        }
+      }
     } catch (err) {
       console.error('Login failed:', err);
       if (err.response?.status === 401) {

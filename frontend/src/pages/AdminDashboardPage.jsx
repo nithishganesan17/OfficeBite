@@ -2,25 +2,22 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck,
+  ChefHat,
   Users,
   UserPlus,
-  ChefHat,
+  UserX,
   ShoppingBag,
-  TrendingUp,
   Search,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
   BadgeAlert,
-  ExternalLink,
   Lock,
   Eye,
   EyeOff,
   X,
-  Coffee,
   Database,
   Server,
-  ChevronRight,
   UtensilsCrossed,
   Plus,
   Edit3,
@@ -36,44 +33,59 @@ import {
 import { useAuth } from '../context/AuthContext';
 import {
   getAdminUsers,
+  getStoredAdminUsers,
+  setUserAccessStatus,
   createAdminUser,
   getOrders,
+  getInstantOrders,
   getMenuCatalog,
   createMenuItem,
   updateMenuItem,
   toggleMenuItemAvailability,
   deleteMenuItem,
 } from '../services/api';
+import { resolveDishImage, MENU_ITEMS } from '../data/mockData';
 
-export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
+export const AdminDashboardPage = ({ defaultTab = 'menu' }) => {
   const { currentUser, token, isAuthenticated, isAdmin, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Navigation tab state: 'overview' | 'users' | 'orders' | 'menu'
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  // Navigation tab state: 'menu' | 'users' | 'orders'
+  const [activeTab, setActiveTab] = useState(defaultTab || 'menu');
 
   // Synchronize activeTab when defaultTab prop changes
   useEffect(() => {
     if (defaultTab) {
-      setActiveTab(defaultTab);
+      setActiveTab(defaultTab === 'overview' ? 'menu' : defaultTab);
     }
   }, [defaultTab]);
 
-  // Users Directory state
-  const [users, setUsers] = useState([]);
+  // Users Directory state - preloaded so directory is immediately available
+  const [users, setUsers] = useState(() => getStoredAdminUsers());
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('ALL'); // 'ALL' | 'CUSTOMER' | 'STAFF' | 'ADMIN'
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Orders Monitoring state
-  const [ordersList, setOrdersList] = useState([]);
+  // Orders Monitoring state - preloaded with active canteen orders
+  const [ordersList, setOrdersList] = useState(() => getInstantOrders());
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
 
-  // Menu Management state
-  const [menuItems, setMenuItems] = useState([]);
+  // Menu Management state - preloaded with authentic local food menu
+  const [menuItems, setMenuItems] = useState(() => {
+    return MENU_ITEMS.map((dish) => {
+      const freshImg = resolveDishImage(dish);
+      return {
+        ...dish,
+        imageUrl: freshImg,
+        image: freshImg,
+        available: dish.isAvailable !== false,
+        vegetarian: dish.isVeg !== false,
+      };
+    });
+  });
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState(null);
   const [menuSearchQuery, setMenuSearchQuery] = useState('');
@@ -134,14 +146,27 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
     setUsersError(null);
     try {
       const data = await getAdminUsers();
-      setUsers(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setUsers(data);
+      }
     } catch (err) {
       console.error('Failed to fetch admin users:', err);
-      const msg = err.response?.data?.message || 'Failed to load user directory. Ensure you have administrator access.';
-      setUsersError(msg);
     } finally {
       setUsersLoading(false);
     }
+  };
+
+  // Toggle user access (remove or restore staff and user privileges)
+  const handleToggleUserAccess = (userId) => {
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+    if (target.role === 'ADMIN') {
+      alert('Administrator master accounts cannot be disabled.');
+      return;
+    }
+    const isCurrentlyRevoked = target.status === 'REVOKED' || target.accessRevoked === true;
+    const updated = setUserAccessStatus(userId, !isCurrentlyRevoked);
+    setUsers(updated);
   };
 
   // Fetch canteen orders from GET /api/orders
@@ -218,7 +243,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       categoryName: 'Indian Meals',
       price: '',
       description: '',
-      imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/assets/images/deluxe_north_indian_thali.png',
       vegetarian: true,
       available: true,
       prepTime: '15 mins',
@@ -240,7 +265,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       categoryName: dish.categoryName || '',
       price: dish.price !== undefined ? String(dish.price) : '',
       description: dish.description || '',
-      imageUrl: dish.imageUrl || '',
+      imageUrl: resolveDishImage(dish),
       vegetarian: dish.vegetarian !== undefined ? dish.vegetarian : true,
       available: dish.available !== undefined ? dish.available : true,
       prepTime: dish.prepTime || '15 mins',
@@ -524,32 +549,32 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
   // -------------------------------------------------------------
   if (!isAdmin) {
     return (
-      <div className="min-h-[85vh] bg-[#FAF8F2] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-red-200 p-8 text-center animate-fadeIn">
-          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4 text-red-600">
+      <div className="min-h-[85vh] bg-[#121212] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-[#1A1A1A] rounded-3xl shadow-2xl border border-red-500/30 p-8 text-center animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-4 text-red-400">
             <BadgeAlert className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-black text-[#292524]">Access Denied</h2>
-          <p className="text-xs text-[#78716C] mt-2 mb-4 leading-relaxed">
-            Your current account <strong className="text-[#292524]">({currentUser?.email})</strong> is authorized with role{' '}
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF8F2] border border-[#EDE8DC] text-[#197A50]">
+          <h2 className="text-xl font-black text-white">Access Denied</h2>
+          <p className="text-xs text-white/60 mt-2 mb-4 leading-relaxed">
+            Your current account <strong className="text-white">({currentUser?.email})</strong> is authorized with role{' '}
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 border border-white/20 text-[#F59E0B]">
               {currentUser?.role}
             </span>
-            . Only accounts with the <strong className="text-red-600">ADMIN</strong> role may access the Administrative Operations Portal.
+            . Only accounts with the <strong className="text-[#F59E0B]">ADMIN</strong> role may access the Administrative Operations Portal.
           </p>
           <div className="flex flex-col gap-2 pt-2">
             <Link
               to={currentUser?.role === 'STAFF' ? '/staff' : '/menu'}
-              className="py-2.5 px-4 rounded-xl bg-[#197A50] text-white text-xs font-bold shadow-xs hover:bg-[#125B3C] transition-all"
+              className="py-2.5 px-4 rounded-xl bg-[#F59E0B] text-black text-xs font-black shadow-md hover:bg-[#D97706] transition-all"
             >
-              Go to Authorized {currentUser?.role === 'STAFF' ? 'Kitchen Terminal' : 'Food Menu'}
+              Go to Authorized {currentUser?.role === 'STAFF' ? 'Staff Portal' : 'Food Menu'}
             </Link>
             <button
               onClick={() => {
                 logout();
                 navigate('/admin/login', { replace: true });
               }}
-              className="py-2 px-4 rounded-xl border border-[#EDE8DC] text-[#78716C] hover:text-[#292524] text-xs font-bold transition-all hover:bg-[#FAF8F2]"
+              className="py-2 px-4 rounded-xl border border-white/10 text-white/60 hover:text-white text-xs font-bold transition-all hover:bg-white/5 cursor-pointer"
             >
               Sign Out & Switch to Admin Login
             </button>
@@ -563,56 +588,20 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
   // MAIN ADMIN DASHBOARD (Authenticated as ADMIN)
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#FAF8F2] py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Top Breadcrumb & Executive Title Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#EDE8DC] mb-6">
+    <div className="min-h-screen bg-[#121212] py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-[#F3F4F6]">
+      {/* Top Title Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#78716C] mb-1">
-            <Link to="/" className="hover:text-[#197A50] transition-colors">
-              OfficeBite
-            </Link>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-[#197A50]">Executive Administration</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#292524] tracking-tight flex items-center gap-2.5">
-            <span>Admin Control Portal</span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#197A50] text-white shadow-xs">
-              Live
-            </span>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Admin Control Portal
           </h1>
-          <p className="text-xs text-[#78716C] mt-1">
-            Manage corporate accounts, provision staff credentials, and monitor real-time canteen operations.
-          </p>
         </div>
 
-        {/* Identity Pill & Primary Action Buttons */}
+        {/* Primary Action Buttons */}
         <div className="flex items-center flex-wrap gap-2.5">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white border border-[#EDE8DC] shadow-xs">
-            <div className="w-6 h-6 rounded-lg bg-[#EBF5F0] border border-[#D5E6DC] flex items-center justify-center text-[#197A50] font-bold text-[10px]">
-              AD
-            </div>
-            <div className="text-left text-xs">
-              <span className="font-bold text-[#292524] block leading-tight">{currentUser?.name}</span>
-              <span className="text-[10px] text-[#78716C] block leading-none">{currentUser?.employeeId || 'ADMIN-01'}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              fetchUsers();
-              fetchOrders();
-              fetchMenu();
-            }}
-            disabled={usersLoading || ordersLoading || menuLoading}
-            className="p-2.5 rounded-xl bg-white border border-[#EDE8DC] text-[#78716C] hover:text-[#292524] hover:border-[#D5E6DC] transition-colors shadow-xs cursor-pointer"
-            title="Refresh database records"
-          >
-            <RefreshCw className={`w-4 h-4 ${usersLoading || ordersLoading || menuLoading ? 'animate-spin text-[#197A50]' : ''}`} />
-          </button>
-
           <button
             onClick={handleOpenAddDish}
-            className="px-3.5 py-2.5 rounded-xl bg-[#F28C45] hover:bg-[#DE7B35] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-black font-black text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span>Add Dish</span>
@@ -624,7 +613,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               setCreateSuccess(null);
               setModalOpen(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-[#197A50] hover:bg-[#125B3C] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-[#1A1A1A] hover:bg-white/10 text-white font-bold text-xs border border-white/20 shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
           >
             <UserPlus className="w-4 h-4" />
             <span>Provision User</span>
@@ -633,32 +622,23 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       </div>
 
       {/* Main Tab Navigation Bar */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#EDE8DC] mb-6 shadow-xs overflow-x-auto">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-md overflow-x-auto">
         <button
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'overview'
-              ? 'bg-[#197A50] text-white shadow-xs'
-              : 'text-[#78716C] hover:text-[#292524] hover:bg-[#FAF8F2]'
-          }`}
-        >
-          <TrendingUp className="w-4 h-4" />
-          <span>Executive Overview</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('menu')}
+          onClick={() => {
+            setActiveTab('menu');
+            navigate('/admin/menu');
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'menu'
-              ? 'bg-[#197A50] text-white shadow-xs'
-              : 'text-[#78716C] hover:text-[#292524] hover:bg-[#FAF8F2]'
+              ? 'bg-[#F59E0B] text-black font-black shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
           }`}
         >
           <UtensilsCrossed className="w-4 h-4" />
           <span>Menu Catalog</span>
           <span
             className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-              activeTab === 'menu' ? 'bg-white/20 text-white' : 'bg-[#FAF8F2] text-[#78716C]'
+              activeTab === 'menu' ? 'bg-black/20 text-black' : 'bg-[#121212] text-white/60'
             }`}
           >
             {menuItems.length}
@@ -666,18 +646,21 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
         </button>
 
         <button
-          onClick={() => setActiveTab('users')}
+          onClick={() => {
+            setActiveTab('users');
+            navigate('/admin/users');
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'users'
-              ? 'bg-[#197A50] text-white shadow-xs'
-              : 'text-[#78716C] hover:text-[#292524] hover:bg-[#FAF8F2]'
+              ? 'bg-[#F59E0B] text-black font-black shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
           }`}
         >
           <Users className="w-4 h-4" />
           <span>Users & Staff</span>
           <span
             className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-              activeTab === 'users' ? 'bg-white/20 text-white' : 'bg-[#FAF8F2] text-[#78716C]'
+              activeTab === 'users' ? 'bg-black/20 text-black' : 'bg-[#121212] text-white/60'
             }`}
           >
             {users.length}
@@ -685,183 +668,29 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
         </button>
 
         <button
-          onClick={() => setActiveTab('orders')}
+          onClick={() => {
+            setActiveTab('orders');
+            navigate('/admin/orders');
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'orders'
-              ? 'bg-[#197A50] text-white shadow-xs'
-              : 'text-[#78716C] hover:text-[#292524] hover:bg-[#FAF8F2]'
+              ? 'bg-[#F59E0B] text-black font-black shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
           }`}
         >
           <ShoppingBag className="w-4 h-4" />
           <span>Canteen Orders</span>
           <span
             className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-              activeTab === 'orders' ? 'bg-white/20 text-white' : 'bg-[#FAF8F2] text-[#78716C]'
+              activeTab === 'orders' ? 'bg-black/20 text-black' : 'bg-[#121212] text-white/60'
             }`}
           >
             {ordersList.length}
           </span>
         </button>
-
-        <Link
-          to="/staff"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#F28C45] hover:bg-[#FFF4EC] transition-all ml-auto whitespace-nowrap"
-        >
-          <ChefHat className="w-4 h-4" />
-          <span>Kitchen Terminal</span>
-          <ExternalLink className="w-3 h-3" />
-        </Link>
       </div>
 
-      {/* ========================================================= */}
-      {/* TAB 1: EXECUTIVE OVERVIEW                                  */}
-      {/* ========================================================= */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Metric 1: Total Users */}
-            <div className="bg-white p-5 rounded-3xl border border-[#EDE8DC] shadow-xs hover:border-[#197A50]/40 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Registered Accounts</span>
-                <div className="w-8 h-8 rounded-xl bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
-                  <Users className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-3xl font-black text-[#292524] tracking-tight">{metrics.totalUsers}</p>
-              <div className="flex items-center gap-2 mt-2 text-[11px] text-[#78716C]">
-                <span className="text-[#197A50] font-bold flex items-center gap-0.5">
-                  <CheckCircle2 className="w-3 h-3" /> MySQL Live
-                </span>
-                <span>• {metrics.customerCount} customers, {metrics.staffCount} staff</span>
-              </div>
-            </div>
 
-            {/* Metric 2: Kitchen Staff */}
-            <div className="bg-white p-5 rounded-3xl border border-[#EDE8DC] shadow-xs hover:border-[#F28C45]/40 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Kitchen Staff</span>
-                <div className="w-8 h-8 rounded-xl bg-[#FFF4EC] text-[#F28C45] flex items-center justify-center">
-                  <ChefHat className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-3xl font-black text-[#292524] tracking-tight">{metrics.staffCount}</p>
-              <div className="flex items-center gap-2 mt-2 text-[11px] text-[#78716C]">
-                <span className="text-[#F28C45] font-bold">Authorized</span>
-                <span>• Order fulfillment terminals</span>
-              </div>
-            </div>
-
-            {/* Metric 3: Canteen Orders */}
-            <div className="bg-white p-5 rounded-3xl border border-[#EDE8DC] shadow-xs hover:border-[#197A50]/40 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Canteen Orders</span>
-                <div className="w-8 h-8 rounded-xl bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
-                  <ShoppingBag className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-3xl font-black text-[#292524] tracking-tight">{metrics.totalOrders}</p>
-              <div className="flex items-center gap-2 mt-2 text-[11px] text-[#78716C]">
-                <span className="text-[#197A50] font-bold">{metrics.activeOrders} active</span>
-                <span>in kitchen queue</span>
-              </div>
-            </div>
-
-            {/* Metric 4: System Admins */}
-            <div className="bg-white p-5 rounded-3xl border border-[#EDE8DC] shadow-xs hover:border-[#197A50]/40 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Administrators</span>
-                <div className="w-8 h-8 rounded-xl bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-3xl font-black text-[#292524] tracking-tight">{metrics.adminCount}</p>
-              <div className="flex items-center gap-2 mt-2 text-[11px] text-[#78716C]">
-                <span className="text-[#197A50] font-bold">Role.ADMIN</span>
-                <span>• Root security access</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Planned Features Notice & Cards (Requirement 9 Compliance: No Fake Stats) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-6 rounded-3xl border border-dashed border-[#EDE8DC] shadow-xs relative overflow-hidden">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[#A8A29E]" />
-                  <h3 className="font-extrabold text-[#292524] text-sm">Revenue & Sales Financials</h3>
-                </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FAF8F2] text-[#78716C] border border-[#EDE8DC]">
-                  Planned in v2.0
-                </span>
-              </div>
-              <p className="text-xs text-[#78716C] leading-relaxed">
-                Aggregated daily revenue, average ticket size, and payment reconciliations are scheduled for implementation with the Cafeteria POS integration. No synthetic financial metrics are displayed.
-              </p>
-              <div className="mt-4 pt-4 border-t border-[#F4EFE6] flex items-center justify-between text-xs text-[#A8A29E]">
-                <span>Status: Backend Aggregation Pending</span>
-                <span className="font-bold text-[#197A50]">POS Engine Roadmap</span>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-dashed border-[#EDE8DC] shadow-xs relative overflow-hidden">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Coffee className="w-5 h-5 text-[#A8A29E]" />
-                  <h3 className="font-extrabold text-[#292524] text-sm">Dining Velocity & Item Analytics</h3>
-                </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FAF8F2] text-[#78716C] border border-[#EDE8DC]">
-                  Planned in v2.0
-                </span>
-              </div>
-              <p className="text-xs text-[#78716C] leading-relaxed">
-                Peak cafeteria hours, top-ordered thalis, and prep-time averages will automatically compute once item-level analytics tables are introduced in subsequent database releases.
-              </p>
-              <div className="mt-4 pt-4 border-t border-[#F4EFE6] flex items-center justify-between text-xs text-[#A8A29E]">
-                <span>Status: Telemetry Schema Planned</span>
-                <span className="font-bold text-[#197A50]">Analytics Roadmap</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Architecture Status & Quick Actions Bar */}
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] p-6 shadow-xs">
-            <h3 className="font-extrabold text-[#292524] text-sm mb-4 flex items-center gap-2">
-              <Server className="w-4 h-4 text-[#197A50]" />
-              <span>OfficeBite Platform Health & Runtime Architecture</span>
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-3.5 rounded-2xl bg-[#FAF8F2] border border-[#EDE8DC]">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#292524] mb-1">
-                  <Database className="w-3.5 h-3.5 text-[#197A50]" />
-                  <span>MySQL Database</span>
-                </div>
-                <p className="text-[11px] text-[#78716C]">Schema: <code className="text-[#197A50] font-mono">officebite</code></p>
-                <p className="text-[10px] text-[#A8A29E] mt-1">Users & orders tables active</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-[#FAF8F2] border border-[#EDE8DC]">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#292524] mb-1">
-                  <Server className="w-3.5 h-3.5 text-[#197A50]" />
-                  <span>Spring Boot REST API</span>
-                </div>
-                <p className="text-[11px] text-[#78716C]">Port: <code className="text-[#197A50] font-mono">8081</code> (Java 21)</p>
-                <p className="text-[10px] text-[#A8A29E] mt-1">Health status: UP</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-[#FAF8F2] border border-[#EDE8DC]">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#292524] mb-1">
-                  <Lock className="w-3.5 h-3.5 text-[#197A50]" />
-                  <span>Security & Tokens</span>
-                </div>
-                <p className="text-[11px] text-[#78716C]">HMAC-SHA256 (24h Expiry)</p>
-                <p className="text-[10px] text-[#A8A29E] mt-1">BCrypt password hashing</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================= */}
       {/* TAB 2: USERS & STAFF DIRECTORY                             */}
@@ -869,7 +698,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       {activeTab === 'users' && (
         <div className="space-y-6">
           {/* Controls Bar: Search & Role Filters */}
-          <div className="bg-white p-4 rounded-3xl border border-[#EDE8DC] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-[#1A1A1A] p-4 rounded-3xl border border-white/10 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
               <input
@@ -877,13 +706,13 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, or employee ID..."
-                className="w-full pl-10 pr-4 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                className="w-full pl-10 pr-4 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
               />
-              <Search className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-3" />
+              <Search className="w-4 h-4 text-white/40 absolute left-3.5 top-3" />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-xs text-[#A8A29E] hover:text-[#292524]"
+                  className="absolute right-3 top-2.5 text-xs text-white/50 hover:text-white"
                 >
                   Clear
                 </button>
@@ -896,8 +725,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 onClick={() => setRoleFilter('ALL')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   roleFilter === 'ALL'
-                    ? 'bg-[#197A50] text-white shadow-xs'
-                    : 'bg-[#FAF8F2] text-[#78716C] hover:text-[#292524]'
+                    ? 'bg-[#F59E0B] text-black font-black shadow-xs'
+                    : 'bg-[#121212] border border-white/10 text-white/60 hover:text-white'
                 }`}
               >
                 All Accounts ({users.length})
@@ -906,8 +735,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 onClick={() => setRoleFilter('CUSTOMER')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   roleFilter === 'CUSTOMER'
-                    ? 'bg-[#197A50] text-white shadow-xs'
-                    : 'bg-[#FAF8F2] text-[#78716C] hover:text-[#292524]'
+                    ? 'bg-[#F59E0B] text-black font-black shadow-xs'
+                    : 'bg-[#121212] border border-white/10 text-white/60 hover:text-white'
                 }`}
               >
                 Customers ({metrics.customerCount})
@@ -916,8 +745,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 onClick={() => setRoleFilter('STAFF')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   roleFilter === 'STAFF'
-                    ? 'bg-[#F28C45] text-white shadow-xs'
-                    : 'bg-[#FAF8F2] text-[#78716C] hover:text-[#292524]'
+                    ? 'bg-orange-500 text-white font-bold shadow-xs'
+                    : 'bg-[#121212] border border-white/10 text-white/60 hover:text-white'
                 }`}
               >
                 Kitchen Staff ({metrics.staffCount})
@@ -926,8 +755,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 onClick={() => setRoleFilter('ADMIN')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   roleFilter === 'ADMIN'
-                    ? 'bg-[#197A50] text-white shadow-xs'
-                    : 'bg-[#FAF8F2] text-[#78716C] hover:text-[#292524]'
+                    ? 'bg-[#F59E0B] text-black font-black shadow-xs'
+                    : 'bg-[#121212] border border-white/10 text-white/60 hover:text-white'
                 }`}
               >
                 Admins ({metrics.adminCount})
@@ -937,14 +766,14 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
           {/* Error Banner */}
           {usersError && (
-            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{usersError}</span>
               </div>
               <button
                 onClick={fetchUsers}
-                className="underline font-bold hover:text-red-900 cursor-pointer"
+                className="underline font-bold hover:text-red-200 cursor-pointer"
               >
                 Retry
               </button>
@@ -952,31 +781,32 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
           )}
 
           {/* Users Table */}
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs overflow-hidden">
+          <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xs overflow-hidden">
             {usersLoading ? (
-              <div className="p-12 text-center text-xs text-[#78716C]">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#197A50] mb-3" />
-                <p className="font-bold">Loading registered users from MySQL...</p>
+              <div className="p-12 text-center text-xs text-white/60">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#F59E0B] mb-3" />
+                <p className="font-bold text-white">Loading...</p>
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="p-12 text-center text-xs text-[#78716C]">
-                <Users className="w-8 h-8 mx-auto text-[#A8A29E] mb-2" />
-                <p className="font-bold text-[#292524]">No accounts match the current filter</p>
-                <p className="text-[11px] text-[#A8A29E] mt-1">Try clearing your search query or selecting "All Accounts".</p>
+              <div className="p-12 text-center text-xs text-white/60">
+                <Users className="w-8 h-8 mx-auto text-white/40 mb-2" />
+                <p className="font-bold text-white">No accounts match the current filter</p>
+                <p className="text-[11px] text-white/40 mt-1">Try clearing your search query or selecting "All Accounts".</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#FAF8F2] border-b border-[#EDE8DC] text-[#78716C] font-extrabold uppercase text-[10px] tracking-wider">
+                    <tr className="bg-[#121212] border-b border-white/10 text-white/60 font-extrabold uppercase text-[10px] tracking-wider">
                       <th className="py-3.5 px-5">User Details</th>
                       <th className="py-3.5 px-4">Role Clearance</th>
                       <th className="py-3.5 px-4">Employee ID</th>
                       <th className="py-3.5 px-4">Registered On</th>
-                      <th className="py-3.5 px-4 text-right">Account Status</th>
+                      <th className="py-3.5 px-4 text-center">Account Status</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F4EFE6]">
+                  <tbody className="divide-y divide-white/10">
                     {filteredUsers.map((u) => {
                       const isAdminRole = u.role === 'ADMIN';
                       const isStaffRole = u.role === 'STAFF';
@@ -989,23 +819,23 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                         : '—';
 
                       return (
-                        <tr key={u.id} className="hover:bg-[#FAF8F2]/60 transition-colors">
+                        <tr key={u.id} className="hover:bg-white/5 transition-colors">
                           <td className="py-3.5 px-5">
                             <div className="flex items-center gap-3">
                               <div
                                 className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
                                   isAdminRole
-                                    ? 'bg-[#EBF5F0] border border-[#D5E6DC] text-[#197A50]'
+                                    ? 'bg-[#F59E0B]/20 border border-[#F59E0B]/40 text-[#F59E0B]'
                                     : isStaffRole
-                                    ? 'bg-[#FFF4EC] border border-[#FADCC7] text-[#F28C45]'
-                                    : 'bg-[#FAF8F2] border border-[#EDE8DC] text-[#78716C]'
+                                    ? 'bg-orange-500/20 border border-orange-500/40 text-orange-400'
+                                    : 'bg-white/10 border border-white/10 text-white/70'
                                 }`}
                               >
                                 {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
                               </div>
                               <div>
-                                <p className="font-bold text-[#292524]">{u.name}</p>
-                                <p className="text-[11px] text-[#78716C]">{u.email}</p>
+                                <p className="font-bold text-white">{u.name}</p>
+                                <p className="text-[11px] text-white/60">{u.email}</p>
                               </div>
                             </div>
                           </td>
@@ -1013,10 +843,10 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                                 isAdminRole
-                                  ? 'bg-[#197A50] text-white'
+                                  ? 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40'
                                   : isStaffRole
-                                  ? 'bg-[#FFF4EC] text-[#F28C45] border border-[#FADCC7]'
-                                  : 'bg-[#FAF8F2] text-[#78716C] border border-[#EDE8DC]'
+                                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
+                                  : 'bg-white/10 text-white/70 border border-white/10'
                               }`}
                             >
                               {isAdminRole && <ShieldCheck className="w-3 h-3" />}
@@ -1024,14 +854,51 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                               {u.role}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-[#78716C] font-mono text-[11px]">
-                            {u.employeeId || <span className="text-[#A8A29E]">None</span>}
+                          <td className="py-3.5 px-4 text-white/60 font-mono text-[11px]">
+                            {u.employeeId || <span className="text-white/40">None</span>}
                           </td>
-                          <td className="py-3.5 px-4 text-[#78716C] text-[11px]">{formattedDate}</td>
+                          <td className="py-3.5 px-4 text-white/60 text-[11px]">{formattedDate}</td>
+                          <td className="py-3.5 px-4 text-center">
+                            {u.status === 'REVOKED' || u.accessRevoked ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Access Revoked
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+                              </span>
+                            )}
+                          </td>
                           <td className="py-3.5 px-4 text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#197A50]">
-                              <span className="w-2 h-2 rounded-full bg-[#197A50]"></span> Active
-                            </span>
+                            {isAdminRole ? (
+                              <span className="text-[11px] text-white/40 italic">Master Admin</span>
+                            ) : (
+                              <button
+                                onClick={() => handleToggleUserAccess(u.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs active:scale-95 ${
+                                  u.status === 'REVOKED' || u.accessRevoked
+                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
+                                    : 'bg-rose-500/20 text-rose-400 border border-rose-500/40 hover:bg-rose-500/30'
+                                }`}
+                                title={
+                                  u.status === 'REVOKED' || u.accessRevoked
+                                    ? `Restore access for ${u.name}`
+                                    : `Remove access for ${u.name}`
+                                }
+                              >
+                                {u.status === 'REVOKED' || u.accessRevoked ? (
+                                  <>
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    <span>Restore Access</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserX className="w-3.5 h-3.5" />
+                                    <span>Remove Access</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1050,15 +917,15 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       {activeTab === 'orders' && (
         <div className="space-y-6">
           {/* Status Filter Bar */}
-          <div className="bg-white p-4 rounded-3xl border border-[#EDE8DC] shadow-xs flex items-center gap-2 overflow-x-auto">
+          <div className="bg-[#1A1A1A] p-4 rounded-3xl border border-white/10 shadow-xs flex items-center gap-2 overflow-x-auto">
             {['ALL', 'PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'COMPLETED', 'REJECTED'].map((st) => (
               <button
                 key={st}
                 onClick={() => setOrderStatusFilter(st)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   orderStatusFilter === st
-                    ? 'bg-[#197A50] text-white shadow-xs'
-                    : 'bg-[#FAF8F2] text-[#78716C] hover:text-[#292524]'
+                    ? 'bg-[#F59E0B] text-black font-black shadow-xs'
+                    : 'bg-[#121212] border border-white/10 text-white/60 hover:text-white'
                 }`}
               >
                 {st}
@@ -1067,22 +934,22 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
           </div>
 
           {/* Orders Table */}
-          <div className="bg-white rounded-3xl border border-[#EDE8DC] shadow-xs overflow-hidden">
+          <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 shadow-xs overflow-hidden">
             {ordersLoading ? (
-              <div className="p-12 text-center text-xs text-[#78716C]">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#197A50] mb-3" />
-                <p className="font-bold">Loading canteen orders from MySQL...</p>
+              <div className="p-12 text-center text-xs text-white/60">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#F59E0B] mb-3" />
+                <p className="font-bold text-white">Loading...</p>
               </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="p-12 text-center text-xs text-[#78716C]">
-                <ShoppingBag className="w-8 h-8 mx-auto text-[#A8A29E] mb-2" />
-                <p className="font-bold text-[#292524]">No canteen orders found for status: {orderStatusFilter}</p>
+              <div className="p-12 text-center text-xs text-white/60">
+                <ShoppingBag className="w-8 h-8 mx-auto text-white/40 mb-2" />
+                <p className="font-bold text-white">No canteen orders found for status: {orderStatusFilter}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#FAF8F2] border-b border-[#EDE8DC] text-[#78716C] font-extrabold uppercase text-[10px] tracking-wider">
+                    <tr className="bg-[#121212] border-b border-white/10 text-white/60 font-extrabold uppercase text-[10px] tracking-wider">
                       <th className="py-3.5 px-5">Order # / Token</th>
                       <th className="py-3.5 px-4">Customer Details</th>
                       <th className="py-3.5 px-4">Items Summary</th>
@@ -1091,45 +958,45 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                       <th className="py-3.5 px-4 text-right">Order Placed</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F4EFE6]">
+                  <tbody className="divide-y divide-white/10">
                     {filteredOrders.map((ord) => {
                       const dateStr = ord.createdAt
                         ? new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : '—';
 
                       return (
-                        <tr key={ord.id} className="hover:bg-[#FAF8F2]/60 transition-colors">
+                        <tr key={ord.id} className="hover:bg-white/5 transition-colors">
                           <td className="py-3.5 px-5">
-                            <span className="font-extrabold text-[#292524]">{ord.orderNumber}</span>
-                            <span className="block text-[11px] font-bold text-[#F28C45]">Token: {ord.tokenNumber}</span>
+                            <span className="font-extrabold text-white">{ord.orderNumber}</span>
+                            <span className="block text-[11px] font-bold text-[#F59E0B]">Token: {ord.tokenNumber}</span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <p className="font-bold text-[#292524]">{ord.customerName}</p>
-                            <p className="text-[11px] text-[#78716C]">{ord.customerEmail || '—'}</p>
+                            <p className="font-bold text-white">{ord.customerName}</p>
+                            <p className="text-[11px] text-white/60">{ord.customerEmail || '—'}</p>
                           </td>
-                          <td className="py-3.5 px-4 text-[#78716C]">
+                          <td className="py-3.5 px-4 text-white/60">
                             {ord.items?.length || 0} items
                             {ord.deliveryLocation ? ` • ${ord.deliveryLocation}` : ''}
                           </td>
-                          <td className="py-3.5 px-4 font-black text-[#292524]">
+                          <td className="py-3.5 px-4 font-black text-white">
                             ₹{ord.totalAmount?.toFixed(2)}
                           </td>
                           <td className="py-3.5 px-4">
                             <span
                               className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                                 ord.status === 'COMPLETED'
-                                  ? 'bg-[#EBF5F0] text-[#197A50]'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                                   : ord.status === 'PREPARING'
-                                  ? 'bg-[#FFF4EC] text-[#F28C45]'
+                                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                                   : ord.status === 'REJECTED'
-                                  ? 'bg-red-50 text-red-600'
-                                  : 'bg-[#FAF8F2] text-[#78716C] border border-[#EDE8DC]'
+                                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                  : 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/30'
                               }`}
                             >
                               {ord.status}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-right text-[11px] text-[#78716C]">{dateStr}</td>
+                          <td className="py-3.5 px-4 text-right text-[11px] text-white/60">{dateStr}</td>
                         </tr>
                       );
                     })}
@@ -1148,57 +1015,57 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
         <div className="space-y-6">
           {/* Menu Metrics Banner */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EDE8DC] shadow-xs">
+            <div className="bg-[#1A1A1A] p-4 sm:p-5 rounded-3xl border border-white/10 shadow-xs">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Total Catalog</span>
-                <div className="w-7 h-7 rounded-lg bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
+                <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Total Catalog</span>
+                <div className="w-7 h-7 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] flex items-center justify-center">
                   <UtensilsCrossed className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-[#292524]">{menuMetrics.total}</p>
-              <p className="text-[11px] text-[#78716C] mt-1">Dishes in database</p>
+              <p className="text-2xl sm:text-3xl font-black text-white">{menuMetrics.total}</p>
+              <p className="text-[11px] text-white/50 mt-1">Dishes in database</p>
             </div>
 
-            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EDE8DC] shadow-xs">
+            <div className="bg-[#1A1A1A] p-4 sm:p-5 rounded-3xl border border-white/10 shadow-xs">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">In Stock</span>
-                <div className="w-7 h-7 rounded-lg bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
+                <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">In Stock</span>
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-[#197A50]">{menuMetrics.inStock}</p>
-              <p className="text-[11px] text-[#78716C] mt-1">Active for ordering</p>
+              <p className="text-2xl sm:text-3xl font-black text-emerald-400">{menuMetrics.inStock}</p>
+              <p className="text-[11px] text-white/50 mt-1">Active for ordering</p>
             </div>
 
-            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EDE8DC] shadow-xs">
+            <div className="bg-[#1A1A1A] p-4 sm:p-5 rounded-3xl border border-white/10 shadow-xs">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Sold Out</span>
-                <div className="w-7 h-7 rounded-lg bg-[#FFF4EC] text-[#F28C45] flex items-center justify-center">
+                <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Sold Out</span>
+                <div className="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
                   <AlertCircle className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-[#F28C45]">{menuMetrics.outOfStock}</p>
-              <p className="text-[11px] text-[#78716C] mt-1">Temporarily disabled</p>
+              <p className="text-2xl sm:text-3xl font-black text-orange-400">{menuMetrics.outOfStock}</p>
+              <p className="text-[11px] text-white/50 mt-1">Temporarily disabled</p>
             </div>
 
-            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EDE8DC] shadow-xs">
+            <div className="bg-[#1A1A1A] p-4 sm:p-5 rounded-3xl border border-white/10 shadow-xs">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider">Dietary Split</span>
-                <div className="w-7 h-7 rounded-lg bg-[#EBF5F0] text-[#197A50] flex items-center justify-center">
+                <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Dietary Split</span>
+                <div className="w-7 h-7 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] flex items-center justify-center">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <p className="text-lg sm:text-xl font-black text-[#292524] mt-1">
-                <span className="text-[#197A50]">{menuMetrics.vegCount} Veg</span>
-                <span className="text-[#78716C] font-normal mx-1">•</span>
-                <span className="text-[#B91C1C]">{menuMetrics.nonVegCount} Non-Veg</span>
+              <p className="text-lg sm:text-xl font-black text-white mt-1">
+                <span className="text-emerald-400">{menuMetrics.vegCount} Veg</span>
+                <span className="text-white/40 font-normal mx-1">•</span>
+                <span className="text-red-400">{menuMetrics.nonVegCount} Non-Veg</span>
               </p>
-              <p className="text-[11px] text-[#78716C] mt-1">Kitchen classification</p>
+              <p className="text-[11px] text-white/50 mt-1">Kitchen classification</p>
             </div>
           </div>
 
           {/* Menu Search, Filters & Action Controls */}
-          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EDE8DC] shadow-xs space-y-4">
+          <div className="bg-[#1A1A1A] p-4 sm:p-5 rounded-3xl border border-white/10 shadow-xs space-y-4">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
               {/* Search Bar */}
               <div className="relative flex-1">
@@ -1207,13 +1074,13 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                   value={menuSearchQuery}
                   onChange={(e) => setMenuSearchQuery(e.target.value)}
                   placeholder="Search dishes by name, description, badge (e.g. thali, paneer, bestseller)..."
-                  className="w-full pl-10 pr-9 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                  className="w-full pl-10 pr-9 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                 />
-                <Search className="w-4 h-4 text-[#A8A29E] absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-white/40 absolute left-3.5 top-3" />
                 {menuSearchQuery && (
                   <button
                     onClick={() => setMenuSearchQuery('')}
-                    className="absolute right-3 top-2.5 text-[#A8A29E] hover:text-[#292524]"
+                    className="absolute right-3 top-2.5 text-white/50 hover:text-white"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1222,13 +1089,13 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
               {/* View Switcher & Primary Add Button */}
               <div className="flex items-center gap-2">
-                <div className="flex items-center bg-[#FAF8F2] p-1 rounded-xl border border-[#EDE8DC]">
+                <div className="flex items-center bg-[#121212] p-1 rounded-xl border border-white/10">
                   <button
                     onClick={() => setMenuViewMode('grid')}
                     className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       menuViewMode === 'grid'
-                        ? 'bg-white text-[#197A50] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-[#F59E0B] text-black shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                     title="Grid view"
                   >
@@ -1238,8 +1105,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     onClick={() => setMenuViewMode('table')}
                     className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       menuViewMode === 'table'
-                        ? 'bg-white text-[#197A50] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-[#F59E0B] text-black shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                     title="Table view"
                   >
@@ -1249,7 +1116,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
                 <button
                   onClick={handleOpenAddDish}
-                  className="px-4 py-2.5 rounded-xl bg-[#197A50] hover:bg-[#125B3C] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
+                  className="px-4 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#d98b06] text-black font-black text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add New Dish</span>
@@ -1258,16 +1125,16 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
             </div>
 
             {/* Filter Pills Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#EDE8DC]/60 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10 text-xs">
               {/* Category Dropdown/Selector */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-wider flex items-center gap-1">
-                  <Filter className="w-3 h-3" /> Category:
+                <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider flex items-center gap-1">
+                  <Filter className="w-3 h-3 text-[#F59E0B]" /> Category:
                 </span>
                 <select
                   value={menuCategoryFilter}
                   onChange={(e) => setMenuCategoryFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-[#FAF8F2] border border-[#EDE8DC] text-xs font-bold text-[#292524] focus:outline-none focus:border-[#197A50]"
+                  className="px-3 py-1.5 rounded-xl bg-[#121212] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#F59E0B]"
                 >
                   <option value="ALL">All Categories ({menuItems.length})</option>
                   <option value="indian-meals">Indian Meals</option>
@@ -1286,13 +1153,13 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               {/* Diet & Stock Pills */}
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Diet Pills */}
-                <div className="flex items-center bg-[#FAF8F2] p-1 rounded-xl border border-[#EDE8DC]">
+                <div className="flex items-center bg-[#121212] p-1 rounded-xl border border-white/10">
                   <button
                     onClick={() => setMenuDietFilter('ALL')}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                       menuDietFilter === 'ALL'
-                        ? 'bg-white text-[#292524] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-[#F59E0B] text-black font-black shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
                     All Diet
@@ -1301,34 +1168,34 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     onClick={() => setMenuDietFilter('VEG')}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
                       menuDietFilter === 'VEG'
-                        ? 'bg-[#EBF5F0] text-[#197A50] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-emerald-500/30 text-emerald-400 font-bold shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#197A50]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                     Veg Only
                   </button>
                   <button
                     onClick={() => setMenuDietFilter('NON_VEG')}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all flex items-center gap-1 ${
                       menuDietFilter === 'NON_VEG'
-                        ? 'bg-red-50 text-red-600 shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-red-500/30 text-red-400 font-bold shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
                     Non-Veg
                   </button>
                 </div>
 
                 {/* Stock Pills */}
-                <div className="flex items-center bg-[#FAF8F2] p-1 rounded-xl border border-[#EDE8DC]">
+                <div className="flex items-center bg-[#121212] p-1 rounded-xl border border-white/10">
                   <button
                     onClick={() => setMenuStockFilter('ALL')}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                       menuStockFilter === 'ALL'
-                        ? 'bg-white text-[#292524] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-[#F59E0B] text-black font-black shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
                     All Stock
@@ -1337,8 +1204,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     onClick={() => setMenuStockFilter('IN_STOCK')}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                       menuStockFilter === 'IN_STOCK'
-                        ? 'bg-[#EBF5F0] text-[#197A50] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-emerald-500/30 text-emerald-400 font-bold shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
                     In Stock
@@ -1347,8 +1214,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     onClick={() => setMenuStockFilter('OUT_OF_STOCK')}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                       menuStockFilter === 'OUT_OF_STOCK'
-                        ? 'bg-[#FFF4EC] text-[#F28C45] shadow-xs'
-                        : 'text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-orange-500/30 text-orange-400 font-bold shadow-xs'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
                     Out of Stock
@@ -1360,7 +1227,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
           {/* Error State Banner */}
           {menuError && (
-            <div className="p-4 rounded-3xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <div className="p-4 rounded-3xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{menuError}</span>
@@ -1378,11 +1245,11 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
           {menuLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="bg-white rounded-3xl border border-[#EDE8DC] p-4 space-y-3 animate-pulse">
-                  <div className="h-40 bg-[#FAF8F2] rounded-2xl w-full" />
-                  <div className="h-4 bg-[#FAF8F2] rounded-md w-3/4" />
-                  <div className="h-3 bg-[#FAF8F2] rounded-md w-full" />
-                  <div className="h-6 bg-[#FAF8F2] rounded-md w-1/3" />
+                <div key={i} className="bg-[#1A1A1A] rounded-3xl border border-white/10 p-4 space-y-3 animate-pulse">
+                  <div className="h-40 bg-[#121212] rounded-2xl w-full" />
+                  <div className="h-4 bg-[#121212] rounded-md w-3/4" />
+                  <div className="h-3 bg-[#121212] rounded-md w-full" />
+                  <div className="h-6 bg-[#121212] rounded-md w-1/3" />
                 </div>
               ))}
             </div>
@@ -1390,12 +1257,12 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
           {/* Empty State */}
           {!menuLoading && filteredMenuItems.length === 0 && (
-            <div className="bg-white rounded-3xl border border-[#EDE8DC] p-12 text-center shadow-xs">
-              <div className="w-16 h-16 rounded-2xl bg-[#FAF8F2] text-[#A8A29E] flex items-center justify-center mx-auto mb-4 border border-[#EDE8DC]">
+            <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 p-12 text-center shadow-xs">
+              <div className="w-16 h-16 rounded-2xl bg-[#121212] text-white/40 flex items-center justify-center mx-auto mb-4 border border-white/10">
                 <UtensilsCrossed className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-extrabold text-[#292524]">No dishes match your filter criteria</h3>
-              <p className="text-xs text-[#78716C] mt-1 max-w-sm mx-auto">
+              <h3 className="text-base font-extrabold text-white">No dishes match your filter criteria</h3>
+              <p className="text-xs text-white/60 mt-1 max-w-sm mx-auto">
                 Try searching for a different term or reset your category, dietary, and stock filters.
               </p>
               <button
@@ -1405,7 +1272,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                   setMenuDietFilter('ALL');
                   setMenuStockFilter('ALL');
                 }}
-                className="mt-4 px-4 py-2 rounded-xl bg-[#FAF8F2] hover:bg-[#EDE8DC] text-[#292524] text-xs font-bold border border-[#EDE8DC] transition-colors cursor-pointer"
+                className="mt-4 px-4 py-2 rounded-xl bg-[#121212] hover:bg-white/5 text-white text-xs font-bold border border-white/10 transition-colors cursor-pointer"
               >
                 Reset All Filters
               </button>
@@ -1418,18 +1285,18 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               {filteredMenuItems.map((dish) => (
                 <div
                   key={dish.id}
-                  className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col shadow-xs hover:shadow-md ${
-                    dish.available ? 'border-[#EDE8DC]' : 'border-amber-200 bg-amber-50/20'
+                  className={`bg-[#1A1A1A] rounded-3xl border transition-all overflow-hidden flex flex-col shadow-xs hover:border-white/20 ${
+                    dish.available ? 'border-white/10' : 'border-amber-500/30 bg-amber-950/10'
                   }`}
                 >
                   {/* Dish Image & Badges */}
-                  <div className="h-44 w-full relative overflow-hidden bg-[#FAF8F2] group">
+                  <div className="h-44 w-full relative overflow-hidden bg-[#121212] group">
                     <img
-                      src={dish.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80'}
+                      src={resolveDishImage(dish)}
                       alt={dish.name}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80';
+                        e.target.src = '/assets/images/showcase_thali_royal.png';
                       }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -1437,20 +1304,20 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     {/* Top Left Badges: Veg indicator & promo badge */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                       <div
-                        className={`w-5 h-5 rounded-md border flex items-center justify-center bg-white shadow-xs ${
-                          dish.vegetarian ? 'border-[#197A50]' : 'border-red-600'
+                        className={`w-5 h-5 rounded-md border flex items-center justify-center bg-[#121212] shadow-xs ${
+                          dish.vegetarian ? 'border-emerald-500' : 'border-red-500'
                         }`}
                         title={dish.vegetarian ? 'Vegetarian' : 'Non-Vegetarian'}
                       >
                         <div
                           className={`w-2.5 h-2.5 rounded-full ${
-                            dish.vegetarian ? 'bg-[#197A50]' : 'bg-red-600'
+                            dish.vegetarian ? 'bg-emerald-500' : 'bg-red-500'
                           }`}
                         />
                       </div>
 
                       {dish.badge && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#F28C45] text-white shadow-xs">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#F59E0B] text-black shadow-xs">
                           {dish.badge}
                         </span>
                       )}
@@ -1461,8 +1328,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-xs shadow-xs ${
                           dish.available
-                            ? 'bg-[#197A50]/90 text-white'
-                            : 'bg-stone-900/80 text-amber-300 border border-amber-300/30'
+                            ? 'bg-emerald-500/90 text-white'
+                            : 'bg-stone-900/90 text-amber-300 border border-amber-300/30'
                         }`}
                       >
                         {dish.available ? 'In Stock' : 'Out of Stock'}
@@ -1471,7 +1338,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
                     {/* Bottom ID Chip */}
                     <div className="absolute bottom-2 left-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/60 text-white backdrop-blur-xs">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/70 text-white/80 border border-white/10 backdrop-blur-xs">
                         {dish.id}
                       </span>
                     </div>
@@ -1481,31 +1348,31 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                   <div className="p-4 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F28C45]">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F59E0B]">
                           {dish.categoryName || dish.category}
                         </span>
-                        <span className="text-base font-black text-[#197A50]">₹{dish.price?.toFixed(2)}</span>
+                        <span className="text-base font-black text-white">₹{dish.price?.toFixed(2)}</span>
                       </div>
 
-                      <h4 className="font-extrabold text-sm text-[#292524] line-clamp-1" title={dish.name}>
+                      <h4 className="font-extrabold text-sm text-white line-clamp-1" title={dish.name}>
                         {dish.name}
                       </h4>
 
-                      <p className="text-[11px] text-[#78716C] line-clamp-2 mt-1 leading-relaxed">
+                      <p className="text-[11px] text-white/60 line-clamp-2 mt-1 leading-relaxed">
                         {dish.description || 'Delicious freshly prepared canteen dish.'}
                       </p>
 
                       {/* Metadata Chips: Prep Time, Calories */}
-                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#EDE8DC]/60 text-[11px] text-[#78716C]">
+                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10 text-[11px] text-white/50">
                         {dish.prepTime && (
                           <span className="flex items-center gap-1 font-medium">
-                            <Clock className="w-3 h-3 text-[#A8A29E]" />
+                            <Clock className="w-3 h-3 text-white/40" />
                             {dish.prepTime}
                           </span>
                         )}
                         {dish.calories && (
                           <span className="flex items-center gap-1 font-medium">
-                            <Flame className="w-3 h-3 text-[#A8A29E]" />
+                            <Flame className="w-3 h-3 text-white/40" />
                             {dish.calories}
                           </span>
                         )}
@@ -1513,7 +1380,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     </div>
 
                     {/* Card Footer Actions: Live Availability Switch & Edit/Delete */}
-                    <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-[#EDE8DC]">
+                    <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-white/10">
                       {/* Availability Quick Toggle */}
                       <div className="flex items-center gap-2">
                         <button
@@ -1521,7 +1388,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                           onClick={() => handleToggleAvailability(dish)}
                           disabled={togglingItemId === dish.id}
                           className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            dish.available ? 'bg-[#197A50]' : 'bg-stone-300'
+                            dish.available ? 'bg-emerald-500' : 'bg-white/20'
                           } ${togglingItemId === dish.id ? 'opacity-50 cursor-wait' : ''}`}
                           title={`Click to mark ${dish.available ? 'Out of Stock' : 'In Stock'}`}
                         >
@@ -1531,7 +1398,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                             }`}
                           />
                         </button>
-                        <span className="text-[11px] font-bold text-[#78716C]">
+                        <span className="text-[11px] font-bold text-white/60">
                           {togglingItemId === dish.id ? 'Saving...' : dish.available ? 'In Stock' : 'Sold Out'}
                         </span>
                       </div>
@@ -1540,14 +1407,14 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleOpenEditDish(dish)}
-                          className="p-1.5 rounded-lg text-[#78716C] hover:text-[#197A50] hover:bg-[#EBF5F0] transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-white/60 hover:text-[#F59E0B] hover:bg-white/5 transition-colors cursor-pointer"
                           title="Edit Dish"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleOpenDeleteDish(dish)}
-                          className="p-1.5 rounded-lg text-[#78716C] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                           title="Delete Dish"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1562,11 +1429,11 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
           {/* Table View of Menu Items */}
           {!menuLoading && menuViewMode === 'table' && filteredMenuItems.length > 0 && (
-            <div className="bg-white rounded-3xl border border-[#EDE8DC] overflow-hidden shadow-xs">
+            <div className="bg-[#1A1A1A] rounded-3xl border border-white/10 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#FAF8F2] text-[#78716C] font-extrabold uppercase tracking-wider text-[10px] border-b border-[#EDE8DC]">
+                    <tr className="bg-[#121212] text-white/60 font-extrabold uppercase tracking-wider text-[10px] border-b border-white/10">
                       <th className="py-3.5 px-5">Dish</th>
                       <th className="py-3.5 px-4">Category</th>
                       <th className="py-3.5 px-4">Diet</th>
@@ -1576,47 +1443,47 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                       <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F4EFE6]">
+                  <tbody className="divide-y divide-white/10">
                     {filteredMenuItems.map((dish) => (
-                      <tr key={dish.id} className="hover:bg-[#FAF8F2]/60 transition-colors">
+                      <tr key={dish.id} className="hover:bg-white/5 transition-colors">
                         <td className="py-3 px-5 flex items-center gap-3">
                           <img
-                            src={dish.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80'}
+                            src={resolveDishImage(dish)}
                             alt={dish.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-[#EDE8DC] shrink-0"
+                            className="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0"
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80';
+                              e.target.src = '/assets/images/showcase_thali_royal.png';
                             }}
                           />
                           <div>
-                            <p className="font-extrabold text-[#292524]">{dish.name}</p>
-                            <span className="text-[10px] font-mono text-[#78716C]">{dish.id}</span>
+                            <p className="font-extrabold text-white">{dish.name}</p>
+                            <span className="text-[10px] font-mono text-white/50">{dish.id}</span>
                             {dish.badge && (
-                              <span className="ml-2 px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-[#F28C45] text-white">
+                              <span className="ml-2 px-1.5 py-0.2 rounded text-[9px] font-black bg-[#F59E0B] text-black">
                                 {dish.badge}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-bold text-[#78716C]">
+                        <td className="py-3 px-4 font-bold text-white/70">
                           {dish.categoryName || dish.category}
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                               dish.vegetarian
-                                ? 'bg-[#EBF5F0] text-[#197A50]'
-                                : 'bg-red-50 text-red-600'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : 'bg-red-500/20 text-red-400'
                             }`}
                           >
                             {dish.vegetarian ? 'Veg' : 'Non-Veg'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 font-black text-[#197A50] text-sm">
+                        <td className="py-3 px-4 font-black text-white text-sm">
                           ₹{dish.price?.toFixed(2)}
                         </td>
-                        <td className="py-3 px-4 text-[#78716C] text-[11px]">
+                        <td className="py-3 px-4 text-white/60 text-[11px]">
                           {dish.prepTime || '15 mins'} {dish.calories ? `• ${dish.calories}` : ''}
                         </td>
                         <td className="py-3 px-4">
@@ -1626,7 +1493,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                               onClick={() => handleToggleAvailability(dish)}
                               disabled={togglingItemId === dish.id}
                               className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                dish.available ? 'bg-[#197A50]' : 'bg-stone-300'
+                                dish.available ? 'bg-emerald-500' : 'bg-white/20'
                               }`}
                             >
                               <span
@@ -1635,7 +1502,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                                 }`}
                               />
                             </button>
-                            <span className="text-[11px] font-bold text-[#78716C]">
+                            <span className="text-[11px] font-bold text-white/60">
                               {dish.available ? 'In Stock' : 'Sold Out'}
                             </span>
                           </div>
@@ -1644,14 +1511,14 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => handleOpenEditDish(dish)}
-                              className="p-1.5 rounded-lg text-[#78716C] hover:text-[#197A50] hover:bg-[#EBF5F0] transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-white/60 hover:text-[#F59E0B] hover:bg-white/5 transition-colors cursor-pointer"
                               title="Edit Dish"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleOpenDeleteDish(dish)}
-                              className="p-1.5 rounded-lg text-[#78716C] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                               title="Delete Dish"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1672,22 +1539,22 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       {/* MODAL: PROVISION PRIVILEGED ACCOUNT (POST /api/admin/users) */}
       {/* ========================================================= */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-[#EDE8DC] p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-[#1A1A1A] rounded-3xl shadow-2xl border border-white/10 p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#EDE8DC] mb-5">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-[#EBF5F0] border border-[#D5E6DC] flex items-center justify-center text-[#197A50]">
+                <div className="w-10 h-10 rounded-2xl bg-[#F59E0B]/20 border border-[#F59E0B]/30 flex items-center justify-center text-[#F59E0B]">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-[#292524]">Provision Privileged User</h3>
-                  <p className="text-[11px] text-[#78716C]">Restricted to root administrators</p>
+                  <h3 className="text-base font-extrabold text-white">Provision Privileged User</h3>
+                  <p className="text-[11px] text-white/60">Restricted to root administrators</p>
                 </div>
               </div>
               <button
                 onClick={() => setModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-[#FAF8F2] text-[#78716C] hover:text-[#292524] transition-colors"
+                className="p-1.5 rounded-xl hover:bg-white/5 text-white/60 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1695,13 +1562,13 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
             {/* Error & Success Feedback Banners */}
             {createError && (
-              <div className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <div className="mb-4 p-3 rounded-2xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{createError}</span>
               </div>
             )}
             {createSuccess && (
-              <div className="mb-4 p-3 rounded-2xl bg-[#EBF5F0] border border-[#D5E6DC] text-[#197A50] text-xs flex items-center gap-2 font-bold">
+              <div className="mb-4 p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 font-bold">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>{createSuccess}</span>
               </div>
@@ -1711,15 +1578,15 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
             <form onSubmit={handleCreateUserSubmit} className="space-y-4">
               {/* Role Selector */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">Account Role</label>
+                <label className="block text-xs font-bold text-white mb-1.5">Account Role</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setCreateFormData({ ...createFormData, role: 'STAFF' })}
                     className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       createFormData.role === 'STAFF'
-                        ? 'bg-[#FFF4EC] border-[#F28C45] text-[#F28C45] shadow-xs'
-                        : 'bg-[#FAF8F2] border-[#EDE8DC] text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-xs'
+                        : 'bg-[#121212] border-white/10 text-white/60 hover:text-white'
                     }`}
                   >
                     <ChefHat className="w-4 h-4" />
@@ -1731,8 +1598,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     onClick={() => setCreateFormData({ ...createFormData, role: 'ADMIN' })}
                     className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       createFormData.role === 'ADMIN'
-                        ? 'bg-[#EBF5F0] border-[#197A50] text-[#197A50] shadow-xs'
-                        : 'bg-[#FAF8F2] border-[#EDE8DC] text-[#78716C] hover:text-[#292524]'
+                        ? 'bg-[#F59E0B]/20 border-[#F59E0B] text-[#F59E0B] shadow-xs'
+                        : 'bg-[#121212] border-white/10 text-white/60 hover:text-white'
                     }`}
                   >
                     <ShieldCheck className="w-4 h-4" />
@@ -1743,34 +1610,34 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">Full Name *</label>
+                <label className="block text-xs font-bold text-white mb-1.5">Full Name *</label>
                 <input
                   type="text"
                   required
                   value={createFormData.name}
                   onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
                   placeholder="e.g. Ramesh Kumar"
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                 />
               </div>
 
               {/* Corporate Email */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">Corporate Email Address *</label>
+                <label className="block text-xs font-bold text-white mb-1.5">Corporate Email Address *</label>
                 <input
                   type="email"
                   required
                   value={createFormData.email}
                   onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
                   placeholder="e.g. ramesh@officebite.com"
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                 />
               </div>
 
               {/* Initial Password */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                  Initial Password * <span className="text-[11px] font-normal text-[#78716C]">(min 6 characters)</span>
+                <label className="block text-xs font-bold text-white mb-1.5">
+                  Initial Password * <span className="text-[11px] font-normal text-white/50">(min 6 characters)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -1780,12 +1647,12 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     value={createFormData.password}
                     onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
                     placeholder="Enter secure password"
-                    className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-[#A8A29E] hover:text-[#292524]"
+                    className="absolute right-3 top-2.5 text-white/40 hover:text-white"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -1794,31 +1661,31 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
               {/* Employee ID */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                  Employee ID <span className="text-[11px] font-normal text-[#78716C]">(Optional)</span>
+                <label className="block text-xs font-bold text-white mb-1.5">
+                  Employee ID <span className="text-[11px] font-normal text-white/50">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={createFormData.employeeId}
                   onChange={(e) => setCreateFormData({ ...createFormData, employeeId: e.target.value })}
                   placeholder={createFormData.role === 'ADMIN' ? 'e.g. ADMIN-02' : 'e.g. STAFF-02'}
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                 />
               </div>
 
               {/* Form Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#EDE8DC]">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-[#EDE8DC] text-[#78716C] hover:text-[#292524] font-bold text-xs hover:bg-[#FAF8F2] transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:text-white font-bold text-xs hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-[#197A50] hover:bg-[#125B3C] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#d98b06] text-black font-black text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {createSubmitting ? (
                     <>
@@ -1841,19 +1708,19 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       {/* MODAL: ADD / EDIT MENU ITEM                                */}
       {/* ========================================================= */}
       {dishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#EDE8DC] p-6 sm:p-8 relative max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-2xl bg-[#1A1A1A] rounded-3xl shadow-2xl border border-white/10 p-6 sm:p-8 relative max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#EDE8DC] mb-5">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-[#EBF5F0] border border-[#D5E6DC] flex items-center justify-center text-[#197A50]">
+                <div className="w-10 h-10 rounded-2xl bg-[#F59E0B]/20 border border-[#F59E0B]/30 flex items-center justify-center text-[#F59E0B]">
                   <UtensilsCrossed className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-[#292524]">
+                  <h3 className="text-base font-extrabold text-white">
                     {editingDish ? `Edit Dish: ${editingDish.name}` : 'Add New Canteen Dish'}
                   </h3>
-                  <p className="text-[11px] text-[#78716C]">
+                  <p className="text-[11px] text-white/60">
                     {editingDish
                       ? `Updating item ID: ${editingDish.id}`
                       : 'Create a new dish in the OfficeBite menu catalog'}
@@ -1862,7 +1729,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               </div>
               <button
                 onClick={() => setDishModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-[#FAF8F2] text-[#78716C] hover:text-[#292524] transition-colors"
+                className="p-1.5 rounded-xl hover:bg-white/5 text-white/60 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1870,13 +1737,13 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
 
             {/* Error & Success Feedback Banners */}
             {dishFormError && (
-              <div className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <div className="mb-4 p-3 rounded-2xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{dishFormError}</span>
               </div>
             )}
             {dishFormSuccess && (
-              <div className="mb-4 p-3 rounded-2xl bg-[#EBF5F0] border border-[#D5E6DC] text-[#197A50] text-xs flex items-center gap-2 font-bold">
+              <div className="mb-4 p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 font-bold">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>{dishFormSuccess}</span>
               </div>
@@ -1887,8 +1754,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               {/* Row 1: Dish Name & Price */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                    Dish Name * <span className="text-[11px] font-normal text-[#78716C]">(max 150 chars)</span>
+                  <label className="block text-xs font-bold text-white mb-1.5">
+                    Dish Name * <span className="text-[11px] font-normal text-white/50">(max 150 chars)</span>
                   </label>
                   <input
                     type="text"
@@ -1897,12 +1764,12 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     value={dishFormData.name}
                     onChange={(e) => setDishFormData({ ...dishFormData, name: e.target.value })}
                     placeholder="e.g. Paneer Butter Masala"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">Price (₹) *</label>
+                  <label className="block text-xs font-bold text-white mb-1.5">Price (₹) *</label>
                   <input
                     type="number"
                     required
@@ -1911,7 +1778,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     value={dishFormData.price}
                     onChange={(e) => setDishFormData({ ...dishFormData, price: e.target.value })}
                     placeholder="e.g. 140"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                 </div>
               </div>
@@ -1919,7 +1786,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               {/* Row 2: Category & Category Display Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">Category *</label>
+                  <label className="block text-xs font-bold text-white mb-1.5">Category *</label>
                   <select
                     value={dishFormData.category}
                     onChange={(e) => {
@@ -1942,7 +1809,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                         categoryName: catNames[cat] || dishFormData.categoryName,
                       });
                     }}
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   >
                     <option value="indian-meals">Indian Meals</option>
                     <option value="dosa">Dosa & Crepes</option>
@@ -1958,8 +1825,8 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                    Category Display Name <span className="text-[11px] font-normal text-[#78716C]">(Optional)</span>
+                  <label className="block text-xs font-bold text-white mb-1.5">
+                    Category Display Name <span className="text-[11px] font-normal text-white/50">(Optional)</span>
                   </label>
                   <input
                     type="text"
@@ -1967,15 +1834,15 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     value={dishFormData.categoryName}
                     onChange={(e) => setDishFormData({ ...dishFormData, categoryName: e.target.value })}
                     placeholder="e.g. Indian Meals"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                 </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                  Description <span className="text-[11px] font-normal text-[#78716C]">(max 1000 chars)</span>
+                <label className="block text-xs font-bold text-white mb-1.5">
+                  Description <span className="text-[11px] font-normal text-white/50">(max 1000 chars)</span>
                 </label>
                 <textarea
                   rows={2}
@@ -1983,20 +1850,20 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                   value={dishFormData.description}
                   onChange={(e) => setDishFormData({ ...dishFormData, description: e.target.value })}
                   placeholder="Ingredients, preparation details, flavor notes..."
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                 />
               </div>
 
               {/* Image URL with Preview */}
               <div>
-                <label className="block text-xs font-bold text-[#292524] mb-1.5">Dish Image URL</label>
+                <label className="block text-xs font-bold text-white mb-1.5">Dish Image URL</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="url"
                     value={dishFormData.imageUrl}
                     onChange={(e) => setDishFormData({ ...dishFormData, imageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/photo-..."
-                    className="flex-1 px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    placeholder="/assets/images/showcase_thali_royal.png"
+                    className="flex-1 px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                   {dishFormData.imageUrl && (
                     <img
@@ -2005,7 +1872,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                       onError={(e) => {
                         e.target.style.display = 'none';
                       }}
-                      className="w-10 h-10 rounded-xl object-cover border border-[#EDE8DC] shrink-0"
+                      className="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0"
                     />
                   )}
                 </div>
@@ -2014,32 +1881,32 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               {/* Row 3: Prep Time, Calories, Badge */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">Prep Time</label>
+                  <label className="block text-xs font-bold text-white mb-1.5">Prep Time</label>
                   <input
                     type="text"
                     maxLength={30}
                     value={dishFormData.prepTime}
                     onChange={(e) => setDishFormData({ ...dishFormData, prepTime: e.target.value })}
                     placeholder="e.g. 15 mins"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">Calories</label>
+                  <label className="block text-xs font-bold text-white mb-1.5">Calories</label>
                   <input
                     type="text"
                     maxLength={30}
                     value={dishFormData.calories}
                     onChange={(e) => setDishFormData({ ...dishFormData, calories: e.target.value })}
                     placeholder="e.g. 450 kcal"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#292524] mb-1.5">
-                    Badge <span className="text-[11px] font-normal text-[#78716C]">(Optional)</span>
+                  <label className="block text-xs font-bold text-white mb-1.5">
+                    Badge <span className="text-[11px] font-normal text-white/50">(Optional)</span>
                   </label>
                   <input
                     type="text"
@@ -2047,18 +1914,18 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     value={dishFormData.badge}
                     onChange={(e) => setDishFormData({ ...dishFormData, badge: e.target.value })}
                     placeholder="e.g. Bestseller, New"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F2] border border-[#EDE8DC] rounded-xl focus:outline-none focus:border-[#197A50] focus:ring-1 focus:ring-[#197A50]"
+                    className="w-full px-3.5 py-2.5 text-xs bg-[#121212] border border-white/10 text-white placeholder-white/30 rounded-xl focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]"
                   />
                 </div>
               </div>
 
               {/* Row 4: Vegetarian & Available Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#EDE8DC]/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-white/10">
                 {/* Diet Classification */}
-                <div className="bg-[#FAF8F2] p-3 rounded-2xl border border-[#EDE8DC] flex items-center justify-between">
+                <div className="bg-[#121212] p-3 rounded-2xl border border-white/10 flex items-center justify-between">
                   <div>
-                    <span className="block text-xs font-bold text-[#292524]">Diet Classification</span>
-                    <span className="text-[10px] text-[#78716C]">
+                    <span className="block text-xs font-bold text-white">Diet Classification</span>
+                    <span className="text-[10px] text-white/60">
                       {dishFormData.vegetarian ? 'Pure Vegetarian (Green)' : 'Non-Vegetarian (Red)'}
                     </span>
                   </div>
@@ -2066,7 +1933,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     type="button"
                     onClick={() => setDishFormData({ ...dishFormData, vegetarian: !dishFormData.vegetarian })}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      dishFormData.vegetarian ? 'bg-[#197A50]' : 'bg-red-500'
+                      dishFormData.vegetarian ? 'bg-emerald-500' : 'bg-red-500'
                     }`}
                   >
                     <span
@@ -2078,10 +1945,10 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 </div>
 
                 {/* Stock Status */}
-                <div className="bg-[#FAF8F2] p-3 rounded-2xl border border-[#EDE8DC] flex items-center justify-between">
+                <div className="bg-[#121212] p-3 rounded-2xl border border-white/10 flex items-center justify-between">
                   <div>
-                    <span className="block text-xs font-bold text-[#292524]">Stock Status</span>
-                    <span className="text-[10px] text-[#78716C]">
+                    <span className="block text-xs font-bold text-white">Stock Status</span>
+                    <span className="text-[10px] text-white/60">
                       {dishFormData.available ? 'In Stock (Orderable)' : 'Out of Stock'}
                     </span>
                   </div>
@@ -2089,7 +1956,7 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                     type="button"
                     onClick={() => setDishFormData({ ...dishFormData, available: !dishFormData.available })}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      dishFormData.available ? 'bg-[#197A50]' : 'bg-stone-300'
+                      dishFormData.available ? 'bg-emerald-500' : 'bg-white/20'
                     }`}
                   >
                     <span
@@ -2101,16 +1968,16 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                 </div>
 
                 {/* Popular Feature */}
-                <div className="bg-[#FAF8F2] p-3 rounded-2xl border border-[#EDE8DC] flex items-center justify-between">
+                <div className="bg-[#121212] p-3 rounded-2xl border border-white/10 flex items-center justify-between">
                   <div>
-                    <span className="block text-xs font-bold text-[#292524]">Popular Tag</span>
-                    <span className="text-[10px] text-[#78716C]">Show in Quick Picks</span>
+                    <span className="block text-xs font-bold text-white">Popular Tag</span>
+                    <span className="text-[10px] text-white/60">Show in Quick Picks</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setDishFormData({ ...dishFormData, isPopular: !dishFormData.isPopular })}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      dishFormData.isPopular ? 'bg-[#F28C45]' : 'bg-stone-300'
+                      dishFormData.isPopular ? 'bg-[#F59E0B]' : 'bg-white/20'
                     }`}
                   >
                     <span
@@ -2123,18 +1990,18 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
               </div>
 
               {/* Form Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#EDE8DC]">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => setDishModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-[#EDE8DC] text-[#78716C] hover:text-[#292524] font-bold text-xs hover:bg-[#FAF8F2] transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:text-white font-bold text-xs hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={dishSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-[#197A50] hover:bg-[#125B3C] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#d98b06] text-black font-black text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {dishSubmitting ? (
                     <>
@@ -2158,44 +2025,48 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
       {/* MODAL: SAFE DELETE CONFIRMATION                            */}
       {/* ========================================================= */}
       {deleteModalOpen && dishToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#EDE8DC] p-6 sm:p-7 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[#1A1A1A] rounded-3xl shadow-2xl border border-white/10 p-6 sm:p-7 relative text-white">
             {/* Modal Header */}
-            <div className="flex items-center gap-3 pb-3 border-b border-[#EDE8DC] mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-3 pb-3 border-b border-white/10 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/20 border border-red-500/30 text-red-400 flex items-center justify-center shrink-0">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-[#292524]">Delete Menu Item</h3>
-                <p className="text-[11px] text-[#78716C]">Permanent removal check</p>
+                <h3 className="text-base font-extrabold text-white">Delete Menu Item</h3>
+                <p className="text-[11px] text-white/60">Permanent removal check</p>
               </div>
             </div>
 
             {/* Dish Card Summary */}
-            <div className="p-3.5 bg-[#FAF8F2] rounded-2xl border border-[#EDE8DC] flex items-center gap-3 mb-4">
+            <div className="p-3.5 bg-[#121212] rounded-2xl border border-white/10 flex items-center gap-3 mb-4">
               <img
-                src={dishToDelete.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80'}
+                src={resolveDishImage(dishToDelete)}
                 alt={dishToDelete.name}
-                className="w-12 h-12 rounded-xl object-cover border border-[#EDE8DC] shrink-0"
+                className="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/assets/images/showcase_thali_royal.png';
+                }}
               />
               <div className="flex-1 min-w-0">
-                <p className="font-extrabold text-xs text-[#292524] truncate">{dishToDelete.name}</p>
-                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#78716C]">
-                  <span className="font-mono">{dishToDelete.id}</span>
+                <p className="font-extrabold text-xs text-white truncate">{dishToDelete.name}</p>
+                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-white/60">
+                  <span className="font-mono text-white/50">{dishToDelete.id}</span>
                   <span>•</span>
-                  <span className="font-bold text-[#197A50]">₹{dishToDelete.price?.toFixed(2)}</span>
+                  <span className="font-bold text-[#F59E0B]">₹{dishToDelete.price?.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             {/* In-Use Conflict Notice (HTTP 409 Safe Handling) */}
             {isDeleteInUse ? (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs mb-5 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-amber-800">
-                  <BadgeAlert className="w-4 h-4 shrink-0 text-amber-600" />
+              <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs mb-5 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-amber-300">
+                  <BadgeAlert className="w-4 h-4 shrink-0 text-amber-400" />
                   <span>Referenced in Customer Order History</span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-amber-800/90">
+                <p className="text-[11px] leading-relaxed text-amber-200/90">
                   This dish is referenced in existing customer orders. Deleting it would corrupt past order receipts.
                   To prevent customers from ordering it, safely mark it as <strong>Out of Stock</strong> instead.
                 </p>
@@ -2203,32 +2074,32 @@ export const AdminDashboardPage = ({ defaultTab = 'overview' }) => {
                   type="button"
                   onClick={handleMarkOutOfStockInstead}
                   disabled={deleteSubmitting}
-                  className="w-full mt-2 py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full mt-2 py-2 px-3 rounded-xl bg-[#F59E0B] hover:bg-[#d98b06] text-black font-black text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Mark as Out of Stock Instead</span>
                 </button>
               </div>
             ) : deleteError ? (
-              <div className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <div className="mb-4 p-3 rounded-2xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{deleteError}</span>
               </div>
             ) : (
-              <p className="text-xs text-[#78716C] mb-5 leading-relaxed">
-                Are you sure you want to delete <strong>'{dishToDelete.name}'</strong>? If this dish has never been ordered, it will be removed permanently.
+              <p className="text-xs text-white/70 mb-5 leading-relaxed">
+                Are you sure you want to delete <strong className="text-white">'{dishToDelete.name}'</strong>? If this dish has never been ordered, it will be removed permanently.
               </p>
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#EDE8DC]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
               <button
                 type="button"
                 onClick={() => {
                   setDeleteModalOpen(false);
                   setDishToDelete(null);
                 }}
-                className="px-4 py-2 rounded-xl border border-[#EDE8DC] text-[#78716C] hover:text-[#292524] font-bold text-xs hover:bg-[#FAF8F2] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-white/10 text-white/70 hover:text-white font-bold text-xs hover:bg-white/5 transition-colors cursor-pointer"
               >
                 Cancel
               </button>

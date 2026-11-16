@@ -13,7 +13,6 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { StaffDashboardPage } from './pages/StaffDashboardPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { RoleSelectionPage } from './pages/RoleSelectionPage';
 import { CustomerLoginPage } from './pages/CustomerLoginPage';
 import { StaffLoginPage } from './pages/StaffLoginPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -89,24 +88,22 @@ function AppContent() {
             </ProtectedRoute>
           }
         >
-          <Route path="/admin" element={<AdminDashboardPage defaultTab="overview" />} />
-          <Route path="/admin/dashboard" element={<AdminDashboardPage defaultTab="overview" />} />
+          <Route path="/admin" element={<AdminDashboardPage defaultTab="menu" />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage defaultTab="menu" />} />
           <Route path="/admin/menu" element={<AdminDashboardPage defaultTab="menu" />} />
           <Route path="/admin/users" element={<AdminDashboardPage defaultTab="users" />} />
           <Route path="/admin/orders" element={<AdminDashboardPage defaultTab="orders" />} />
         </Route>
 
-        {/* Dedicated Staff Terminal Login */}
-        <Route path="/staff/login" element={<StaffLoginPage />} />
-
         {/* =========================================
-            4. AUTHENTICATION & ROLE SELECTION PORTAL
-            Independent login forms and role choice
-            Uses AuthLayout with clean branding
+            4. AUTHENTICATION & PORTAL LOGIN
+            Independent login forms with dark homepage theme
+            Uses AuthLayout with Customer & Staff tabs
            ========================================= */}
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<RoleSelectionPage />} />
+          <Route path="/login" element={<Navigate to="/customer/login" replace />} />
           <Route path="/customer/login" element={<CustomerLoginPage />} />
+          <Route path="/staff/login" element={<StaffLoginPage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
