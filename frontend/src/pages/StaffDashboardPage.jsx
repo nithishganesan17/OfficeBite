@@ -47,14 +47,26 @@ export const StaffDashboardPage = () => {
   // Verify access has not been revoked by Administrator
   useEffect(() => {
     const rawRevoked = localStorage.getItem('officebite_revoked_emails');
-    const staffEmail = currentUser?.email || 'staff@officebite.com';
+    let staffEmail = currentUser?.email;
+    if (!staffEmail) {
+      try {
+        const u = localStorage.getItem('officebite_staff_user');
+        if (u) staffEmail = JSON.parse(u)?.email;
+      } catch {}
+    }
     if (rawRevoked && staffEmail) {
       try {
         const list = JSON.parse(rawRevoked);
         if (Array.isArray(list) && list.includes(staffEmail.toLowerCase())) {
           localStorage.removeItem('officebite_staff_token');
           localStorage.removeItem('officebite_staff_user');
-          navigate('/staff/login', { replace: true, state: { revoked: true } });
+          navigate('/staff/login', {
+            replace: true,
+            state: {
+              revoked: true,
+              message: `Access Revoked: Staff permissions for '${staffEmail}' have been removed by the Administrator.`,
+            },
+          });
         }
       } catch {}
     }

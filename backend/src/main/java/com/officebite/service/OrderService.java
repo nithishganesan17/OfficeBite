@@ -296,6 +296,24 @@ public class OrderService {
         return mapToOrderResponse(updated);
     }
 
+    /**
+     * Deletes an order by ID or orderNumber
+     */
+    @Transactional
+    public void deleteOrder(String identifier) {
+        Order order = null;
+        if (identifier != null && identifier.matches("^\\d+$")) {
+            order = orderRepository.findById(Long.parseLong(identifier)).orElse(null);
+        }
+        if (order == null && identifier != null) {
+            order = orderRepository.findByOrderNumber(identifier.trim()).orElse(null);
+        }
+        if (order != null) {
+            orderRepository.delete(order);
+            log.info("Deleted order #{}", identifier);
+        }
+    }
+
     private String generateUniqueOrderNumber() {
         int attempts = 0;
         String orderNumber;

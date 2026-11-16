@@ -92,12 +92,16 @@ export const CustomerLoginPage = () => {
       }
     } catch (err) {
       console.error('Customer login error:', err);
-      if (err.response?.status === 401) {
+      if (err.isAccessRevoked || err.message?.includes('Access Revoked')) {
+        setErrorMessage(
+          err.message || 'Access Revoked: This account has been disabled by the Administrator.'
+        );
+      } else if (err.response?.status === 401) {
         setErrorMessage('Invalid work email or password. Please check your credentials.');
       } else if (err.response?.data?.message) {
         setErrorMessage(err.response.data.message);
       } else {
-        setErrorMessage('Unable to connect to authentication service. Please verify backend is running on port 8081.');
+        setErrorMessage('Invalid credentials or unable to sign in. Please verify your email and password.');
       }
     } finally {
       setIsSubmitting(false);

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { login as apiLogin } from '../services/api';
+import { login as apiLogin, isUserAccessRevoked, resetRevokedAccess } from '../services/api';
 
 /**
  * StaffLoginPage
@@ -28,48 +28,66 @@ export const StaffLoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(() => {
+    if (location.state?.message) return location.state.message;
+    if (location.state?.revoked) {
+      return 'Access Revoked: Staff permissions for this account have been removed by the Administrator.';
+    }
+    return null;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Synchronize state message if navigating with state
+  useEffect(() => {
+    if (location.state?.message) {
+      setErrorMessage(location.state.message);
+    } else if (location.state?.revoked) {
+      setErrorMessage(
+        'Access Revoked: Staff permissions for this account have been removed by the Administrator.'
+      );
+    }
+  }, [location.state]);
 
   // If already authenticated with ADMIN, redirect to /admin. If STAFF, redirect to /staff
   useEffect(() => {
-    const adminTok =
-      localStorage.getItem('officebite_admin_token') || localStorage.getItem('token');
-    const rawAdminUser =
-      localStorage.getItem('officebite_admin_user') || localStorage.getItem('officebite_user');
+    if (location.state?.revoked) return;
+
+    const adminTok = localStorage.getItem('officebite_admin_token');
+    const rawAdminUser = localStorage.getItem('officebite_admin_user');
     let adminUser = null;
     try {
       adminUser = rawAdminUser ? JSON.parse(rawAdminUser) : null;
     } catch {}
 
-    if ((adminTok && adminUser?.role === 'ADMIN') || (currentUser?.role === 'ADMIN')) {
+    if ((adminTok && adminUser?.role === 'ADMIN') || currentUser?.role === 'ADMIN') {
       navigate('/admin', { replace: true });
       return;
     }
 
-    const staffToken =
-      localStorage.getItem('officebite_staff_token') || localStorage.getItem('token');
+    const staffToken = localStorage.getItem('officebite_staff_token');
     const rawStaffUser = localStorage.getItem('officebite_staff_user');
     let staffUser = null;
     try {
       staffUser = rawStaffUser ? JSON.parse(rawStaffUser) : null;
     } catch {}
 
-    const isStaff = Boolean(
-      staffToken && (!staffUser || staffUser.role === 'STAFF')
-    );
-
-    if (isStaff) {
-      navigate('/staff', { replace: true });
+    if (staffToken && staffUser && staffUser.role === 'STAFF') {
+      const isRevoked = isUserAccessRevoked(staffUser.email);
+      if (!isRevoked) {
+        navigate('/staff', { replace: true });
+      }
     }
-  }, [navigate, currentUser]);
+  }, [navigate, currentUser, location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail || !password) {
+    const emailVal = email || document.getElementById('staff-email')?.value || '';
+    const passVal = password || document.getElementById('staff-password')?.value || '';
+
+    const trimmedEmail = emailVal.trim().toLowerCase();
+    if (!trimmedEmail || !passVal) {
       setErrorMessage('Please enter both your staff email and password.');
       return;
     }
@@ -77,7 +95,7 @@ export const StaffLoginPage = () => {
     setIsSubmitting(true);
     try {
       // Authenticate staff with backend and synchronize AuthContext
-      const user = await loginUser(trimmedEmail, password, ['STAFF', 'ADMIN']);
+      const user = await loginUser(trimmedEmail, passVal, null);
 
       if (user.role === 'ADMIN') {
         if (showToast) {
@@ -92,9 +110,11 @@ export const StaffLoginPage = () => {
         const isStaffDest = dest && dest.startsWith('/staff');
         navigate(isStaffDest ? dest : '/staff', { replace: true });
       } else {
-        setErrorMessage(
-          'Access Denied: Kitchen Staff or Admin credentials are required to access this portal.'
-        );
+        // Customer credentials entered on Staff portal: seamlessly redirect them to customer portal
+        if (showToast) {
+          showToast(`Welcome, ${user.name}! Redirected to Canteen.`, 'success');
+        }
+        navigate('/', { replace: true });
       }
     } catch (err) {
       console.error('Kitchen staff login error:', err);
@@ -107,10 +127,18 @@ export const StaffLoginPage = () => {
       } else if (err.response?.data?.message) {
         setErrorMessage(err.response.data.message);
       } else {
-        setErrorMessage('Unable to connect to authentication service. Please verify backend is running on port 8081.');
+        setErrorMessage('Invalid credentials or unable to sign in. Please verify your email and password.');
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRestoreDemoAccess = () => {
+    resetRevokedAccess();
+    setErrorMessage(null);
+    if (showToast) {
+      showToast('Staff access restored! You can now log in.', 'success');
     }
   };
 
@@ -130,12 +158,25 @@ export const StaffLoginPage = () => {
 
         {/* Error Notice Banner */}
         {errorMessage && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <p className="font-bold text-red-300">Authentication Failed</p>
-              <p className="text-red-400 mt-0.5 leading-relaxed">{errorMessage}</p>
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col gap-2">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="text-xs flex-1">
+                <p className="font-bold text-red-300">Authentication Failed</p>
+                <p className="text-red-400 mt-0.5 leading-relaxed">{errorMessage}</p>
+              </div>
             </div>
+            {errorMessage.toLowerCase().includes('revoked') && (
+              <div className="pt-2 border-t border-red-500/20 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleRestoreDemoAccess}
+                  className="px-3 py-1.5 rounded-xl bg-[#F59E0B]/20 hover:bg-[#F59E0B]/30 text-[#F59E0B] font-bold text-xs border border-[#F59E0B]/40 transition-colors cursor-pointer"
+                >
+                  Restore Staff Access
+                </button>
+              </div>
+            )}
           </div>
         )}
 

@@ -15,8 +15,7 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
   if (location.pathname.startsWith('/staff')) {
     const staffToken =
       localStorage.getItem('officebite_staff_token') ||
-      localStorage.getItem('officebite_admin_token') ||
-      localStorage.getItem('token');
+      localStorage.getItem('officebite_admin_token');
     const rawStaffUser =
       localStorage.getItem('officebite_staff_user') ||
       localStorage.getItem('officebite_admin_user');
@@ -26,7 +25,7 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
     } catch {}
 
     const isStaffAuthorized = Boolean(
-      (staffToken && (!staffUser || staffUser.role === 'STAFF' || staffUser.role === 'ADMIN')) ||
+      (staffToken && staffUser && (staffUser.role === 'STAFF' || staffUser.role === 'ADMIN')) ||
       (isAuthenticated && currentUser && (currentUser.role === 'STAFF' || currentUser.role === 'ADMIN'))
     );
 
@@ -44,20 +43,15 @@ export const ProtectedRoute = ({ children, allowedRoles = null, loginPath = '/lo
 
   // 2. Admin portal routes (/admin/*): isolated admin session check
   if (location.pathname.startsWith('/admin')) {
-    const adminToken =
-      localStorage.getItem('officebite_admin_token') ||
-      localStorage.getItem('officebite_staff_token') ||
-      localStorage.getItem('token');
-    const rawAdminUser =
-      localStorage.getItem('officebite_admin_user') ||
-      localStorage.getItem('officebite_user');
+    const adminToken = localStorage.getItem('officebite_admin_token');
+    const rawAdminUser = localStorage.getItem('officebite_admin_user');
     let adminUser = null;
     try {
       adminUser = rawAdminUser ? JSON.parse(rawAdminUser) : null;
     } catch {}
 
     const isAdminAuthorized = Boolean(
-      (adminToken && (!adminUser || adminUser.role === 'ADMIN')) ||
+      (adminToken && adminUser && adminUser.role === 'ADMIN') ||
       (isAuthenticated && currentUser && currentUser.role === 'ADMIN')
     );
 

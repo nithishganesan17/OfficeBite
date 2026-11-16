@@ -50,23 +50,37 @@ export const AdminLoginPage = () => {
     e.preventDefault();
     setErrorMessage(null);
 
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail || !password) {
+    const emailVal = email || document.getElementById('admin-email')?.value || '';
+    const passVal = password || document.getElementById('admin-password')?.value || '';
+
+    const trimmedEmail = emailVal.trim().toLowerCase();
+    if (!trimmedEmail || !passVal) {
       setErrorMessage('Please enter both your administrator email and password.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const user = await loginUser(trimmedEmail, password, ['ADMIN']);
+      const user = await loginUser(trimmedEmail, passVal, null);
 
-      if (showToast) {
-        showToast(`Welcome, Administrator ${user.name}!`, 'success');
+      if (user.role === 'ADMIN') {
+        if (showToast) {
+          showToast(`Welcome, Administrator ${user.name}!`, 'success');
+        }
+        const dest = location.state?.from;
+        const isAdminDest = dest && dest.startsWith('/admin');
+        navigate(isAdminDest ? dest : '/admin', { replace: true });
+      } else if (user.role === 'STAFF') {
+        if (showToast) {
+          showToast(`Authenticated as ${user.name} (Kitchen Staff)`, 'success');
+        }
+        navigate('/staff', { replace: true });
+      } else {
+        if (showToast) {
+          showToast(`Welcome, ${user.name}! Redirected to Canteen.`, 'success');
+        }
+        navigate('/', { replace: true });
       }
-
-      const dest = location.state?.from;
-      const isAdminDest = dest && dest.startsWith('/admin');
-      navigate(isAdminDest ? dest : '/admin', { replace: true });
     } catch (err) {
       console.error('Administrator login error:', err);
       if (err.isRoleMismatch) {
@@ -78,7 +92,7 @@ export const AdminLoginPage = () => {
       } else if (err.response?.data?.message) {
         setErrorMessage(err.response.data.message);
       } else {
-        setErrorMessage('Unable to connect to authentication service. Please verify backend is running on port 8081.');
+        setErrorMessage('Invalid administrator credentials. Please check your email and password.');
       }
     } finally {
       setIsSubmitting(false);

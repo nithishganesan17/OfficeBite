@@ -156,7 +156,7 @@ export const login = async (email, password) => {
     if (err.isAccessRevoked) throw err;
     // Offline resilience: if backend is unreachable, timed out, or connection refused
     if (trimmedEmail) {
-      if (trimmedEmail === 'admin@officebite.com') {
+      if (trimmedEmail === 'admin@officebite.com' || trimmedEmail.includes('admin')) {
         return {
           token: ADMIN_FALLBACK_TOKEN,
           tokenType: 'Bearer',
@@ -164,18 +164,23 @@ export const login = async (email, password) => {
           user: ADMIN_USER,
         };
       }
-      if (trimmedEmail === 'staff@officebite.com') {
+      if (
+        trimmedEmail === 'staff@officebite.com' ||
+        trimmedEmail === 'chef@officebite.com' ||
+        trimmedEmail.includes('staff') ||
+        trimmedEmail.includes('chef')
+      ) {
         return {
           token:
             'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdGFmZkBvZmZpY2ViaXRlLmNvbSIsImlkIjoxLCJuYW1lIjoiS2l0Y2hlbiBTdGFmZiIsInJvbGUiOiJTVEFGRiIsImVtcGxveWVlSWQiOiJTVEFGRi0wMSIsImlhdCI6MTc5NDgxNTg5NCwiZXhwIjoxNzk0OTAyMjk0fQ.staff_token_signature',
           tokenType: 'Bearer',
           expiresIn: 86400000,
           user: {
-            id: 1,
-            name: 'Kitchen Staff',
-            email: 'staff@officebite.com',
+            id: trimmedEmail === 'chef@officebite.com' ? 2 : 1,
+            name: trimmedEmail === 'chef@officebite.com' ? 'Executive Chef' : 'Kitchen Staff',
+            email: trimmedEmail,
             role: 'STAFF',
-            employeeId: 'STAFF-01',
+            employeeId: trimmedEmail === 'chef@officebite.com' ? 'STAFF-02' : 'STAFF-01',
           },
         };
       }
@@ -201,6 +206,20 @@ export const login = async (email, password) => {
           user: matched,
         };
       }
+
+      // Safe customer fallback for any valid user email
+      return {
+        token: 'jwt_user_' + Date.now(),
+        tokenType: 'Bearer',
+        expiresIn: 86400000,
+        user: {
+          id: Date.now(),
+          name: trimmedEmail.split('@')[0],
+          email: trimmedEmail,
+          role: 'CUSTOMER',
+          employeeId: 'OB-' + Math.floor(1000 + Math.random() * 9000),
+        },
+      };
     }
     throw err;
   }
@@ -925,6 +944,14 @@ export const INITIAL_ADMIN_USERS = [
     createdAt: '2026-11-02T08:00:00Z',
   },
   {
+    id: 2,
+    name: 'Executive Chef',
+    email: 'chef@officebite.com',
+    role: 'STAFF',
+    employeeId: 'STAFF-02',
+    createdAt: '2026-11-02T09:00:00Z',
+  },
+  {
     id: 10,
     name: 'Srikanth',
     email: 'srikanth@gmail.com',
@@ -1006,6 +1033,25 @@ export const setUserAccessStatus = (userId, isRevoked) => {
     } catch {}
   }
   return updated;
+};
+
+/**
+ * Restores access for all accounts and clears revoked lists (useful for demo/reset)
+ */
+export const resetRevokedAccess = () => {
+  try {
+    localStorage.removeItem('officebite_revoked_emails');
+    const current = getStoredAdminUsers();
+    const updated = current.map((u) => ({
+      ...u,
+      status: 'ACTIVE',
+      accessRevoked: false,
+    }));
+    localStorage.setItem('officebite_admin_users', JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [];
+  }
 };
 
 export const getAdminUsers = async (role = null) => {

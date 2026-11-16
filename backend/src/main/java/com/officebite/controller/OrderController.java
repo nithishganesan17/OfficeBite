@@ -121,4 +121,16 @@ public class OrderController {
         OrderResponse response = orderService.updateOrderStatus(id, request.getStatus());
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * DELETE /api/orders/{id}
+     * Deletes an order from the database.
+     * Restricted to authenticated users with STAFF or ADMIN roles.
+     */
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable String id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
+    }
 }
