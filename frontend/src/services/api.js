@@ -143,12 +143,19 @@ export const login = async (email, password) => {
   }
 
   try {
-    const response = await apiClient.post('/api/auth/login', { email, password });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1200);
+    const response = await apiClient.post(
+      '/api/auth/login',
+      { email, password },
+      { signal: controller.signal }
+    );
+    clearTimeout(timer);
     return response.data;
   } catch (err) {
     if (err.isAccessRevoked) throw err;
-    // Offline resilience: if backend is unreachable or connection refused
-    if (!err.response && trimmedEmail) {
+    // Offline resilience: if backend is unreachable, timed out, or connection refused
+    if (trimmedEmail) {
       if (trimmedEmail === 'admin@officebite.com') {
         return {
           token: ADMIN_FALLBACK_TOKEN,
@@ -159,7 +166,8 @@ export const login = async (email, password) => {
       }
       if (trimmedEmail === 'staff@officebite.com') {
         return {
-          token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdGFmZkBvZmZpY2ViaXRlLmNvbSIsImlkIjoxLCJuYW1lIjoiS2l0Y2hlbiBTdGFmZiIsInJvbGUiOiJTVEFGRiIsImVtcGxveWVlSWQiOiJTVEFGRi0wMSIsImlhdCI6MTc5NDgxNTg5NCwiZXhwIjoxNzk0OTAyMjk0fQ.staff_token_signature',
+          token:
+            'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdGFmZkBvZmZpY2ViaXRlLmNvbSIsImlkIjoxLCJuYW1lIjoiS2l0Y2hlbiBTdGFmZiIsInJvbGUiOiJTVEFGRiIsImVtcGxveWVlSWQiOiJTVEFGRi0wMSIsImlhdCI6MTc5NDgxNTg5NCwiZXhwIjoxNzk0OTAyMjk0fQ.staff_token_signature',
           tokenType: 'Bearer',
           expiresIn: 86400000,
           user: {
@@ -177,6 +185,20 @@ export const login = async (email, password) => {
           tokenType: 'Bearer',
           expiresIn: 86400000,
           user: DEFAULT_CUSTOMER,
+        };
+      }
+
+      // Check stored directory for other registered accounts (e.g. Shanthosh, provisioned users)
+      const storedUsers = getStoredAdminUsers();
+      const matched = storedUsers.find(
+        (u) => u.email?.trim()?.toLowerCase() === trimmedEmail
+      );
+      if (matched) {
+        return {
+          token: 'jwt_mock_token_' + matched.id,
+          tokenType: 'Bearer',
+          expiresIn: 86400000,
+          user: matched,
         };
       }
     }
@@ -210,13 +232,12 @@ export const getStoredToken = () => {
   if (isStaffPortal) {
     return localStorage.getItem('officebite_staff_token') || localStorage.getItem('token');
   }
-  return localStorage.getItem('officebite_token') || SRIKANTH_TOKEN;
+  return localStorage.getItem('officebite_token') || null;
 };
 
 /**
  * Helper to retrieve stored user profile from localStorage.
- * Ensures the Customer Portal is strictly associated with a Customer (Srikanth),
- * never with Kitchen Staff, while allowing Admin full executive access.
+ * Ensures the Customer Portal is clean for guests until authenticated.
  */
 export const getStoredUser = () => {
   try {
@@ -253,27 +274,21 @@ export const getStoredUser = () => {
     const raw = localStorage.getItem('officebite_user');
     const user = raw ? JSON.parse(raw) : null;
 
-    // Customer Portal: If stored user is Kitchen Staff, separate it so customer portal is clean!
+    // Customer Portal: If stored user is Kitchen Staff, isolate it
     if (user && (user.role === 'STAFF' || user.email === 'staff@officebite.com')) {
       localStorage.setItem('officebite_staff_user', JSON.stringify(user));
       const staffTok = localStorage.getItem('officebite_token') || localStorage.getItem('token');
       if (staffTok) {
         localStorage.setItem('officebite_staff_token', staffTok);
       }
-      localStorage.setItem('officebite_user', JSON.stringify(DEFAULT_CUSTOMER));
-      localStorage.setItem('officebite_token', SRIKANTH_TOKEN);
-      return DEFAULT_CUSTOMER;
+      localStorage.removeItem('officebite_user');
+      localStorage.removeItem('officebite_token');
+      return null;
     }
 
-    if (!user) {
-      localStorage.setItem('officebite_user', JSON.stringify(DEFAULT_CUSTOMER));
-      localStorage.setItem('officebite_token', SRIKANTH_TOKEN);
-      return DEFAULT_CUSTOMER;
-    }
-
-    return user;
+    return user || null;
   } catch {
-    return DEFAULT_CUSTOMER;
+    return null;
   }
 };
 

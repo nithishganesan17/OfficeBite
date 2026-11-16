@@ -34,23 +34,14 @@ export const CheckoutPage = () => {
 
   // Sync state when auth state changes (strictly ensures customer identity)
   React.useEffect(() => {
-    const cust =
-      currentUser &&
-      currentUser.role === 'CUSTOMER' &&
-      currentUser.name !== 'Kitchen Staff'
-        ? currentUser
-        : {
-            name: 'Srikanth',
-            email: 'srikanth@gmail.com',
-            employeeId: 'OB-1710',
-          };
-
-    setFormData((prev) => ({
-      ...prev,
-      customerName: cust.name,
-      customerEmail: cust.email,
-      employeeId: cust.employeeId,
-    }));
+    if (currentUser && currentUser.role !== 'STAFF') {
+      setFormData((prev) => ({
+        ...prev,
+        customerName: currentUser.name || prev.customerName,
+        customerEmail: currentUser.email || prev.customerEmail,
+        employeeId: currentUser.employeeId || prev.employeeId,
+      }));
+    }
   }, [currentUser]);
 
   // UI status states
@@ -137,15 +128,15 @@ export const CheckoutPage = () => {
       const resolvedName =
         formData.customerName && formData.customerName !== 'Kitchen Staff'
           ? formData.customerName.trim()
-          : 'Srikanth';
+          : (currentUser?.name || 'Customer');
       const resolvedEmail =
         formData.customerEmail && !formData.customerEmail.includes('staff@')
           ? formData.customerEmail.trim()
-          : 'srikanth@gmail.com';
+          : (currentUser?.email || 'customer@officebite.com');
       const resolvedEmpId =
         formData.employeeId && formData.employeeId !== 'STAFF-01'
           ? formData.employeeId.trim()
-          : 'OB-1710';
+          : (currentUser?.employeeId || 'OB-' + Math.floor(1000 + Math.random() * 9000));
 
       // Build order payload strictly matching CreateOrderRequest DTO
       // Note: We deliberately do NOT send price or total — backend calculates final bill.

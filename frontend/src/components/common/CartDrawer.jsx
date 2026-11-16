@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import { resolveDishImage } from '../../data/mockData';
 
 export const CartDrawer = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     isCartOpen,
     setIsCartOpen,
@@ -27,7 +29,16 @@ export const CartDrawer = () => {
 
   const handleProceedToCheckout = () => {
     setIsCartOpen(false);
-    navigate('/checkout');
+    if (!isAuthenticated) {
+      navigate('/customer/login', {
+        state: {
+          from: '/checkout',
+          notice: 'Please log in to your account to place your canteen order.',
+        },
+      });
+    } else {
+      navigate('/checkout');
+    }
   };
 
   const handleGoToMenu = () => {

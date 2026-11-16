@@ -28,16 +28,11 @@ export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Ensure Customer Navbar strictly presents Customer identity (Srikanth), never Kitchen Staff
+  // Display logged-in customer profile if authenticated; otherwise null for guest browsing
   const displayCustomer =
-    currentUser && currentUser.role === 'CUSTOMER'
+    isAuthenticated && currentUser && currentUser.role !== 'STAFF'
       ? currentUser
-      : {
-          name: 'Srikanth',
-          email: 'srikanth@gmail.com',
-          role: 'CUSTOMER',
-          employeeId: 'OB-1710',
-        };
+      : null;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [navSearchQuery, setNavSearchQuery] = useState('');
@@ -417,10 +412,11 @@ export const Navbar = () => {
             <Link
               to="/customer/login"
               id="navbar-login-btn"
-              className="w-10 h-10 rounded-full bg-[#1E1E1E] hover:bg-[#252525] border border-white/10 hover:border-[#F59E0B] text-white flex items-center justify-center font-bold text-xs shadow-xs transition-transform hover:scale-105 cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
               title="Customer Sign In"
             >
-              <User className="w-4 h-4 text-[#F59E0B]" />
+              <User className="w-4 h-4 stroke-[2.5]" />
+              <span>Log In</span>
             </Link>
           )}
         </div>

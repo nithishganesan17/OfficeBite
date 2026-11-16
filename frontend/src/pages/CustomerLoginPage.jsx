@@ -58,15 +58,18 @@ export const CustomerLoginPage = () => {
     e.preventDefault();
     setErrorMessage(null);
 
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail || !password) {
+    const emailVal = email || document.getElementById('customer-email')?.value || '';
+    const passVal = password || document.getElementById('customer-password')?.value || '';
+
+    const trimmedEmail = emailVal.trim().toLowerCase();
+    if (!trimmedEmail || !passVal) {
       setErrorMessage('Please enter both your work email and password.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const user = await loginUser(trimmedEmail, password, null);
+      const user = await loginUser(trimmedEmail, passVal, null);
 
       // If administrator credentials entered, directly navigate to admin console
       if (user.role === 'ADMIN') {
@@ -114,6 +117,17 @@ export const CustomerLoginPage = () => {
             Log In
           </h1>
         </div>
+
+        {/* Checkout Intent Notice */}
+        {location.state?.notice && !errorMessage && (
+          <div className="mb-6 bg-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-2xl p-4 flex items-start gap-3 animate-fade-in">
+            <AlertCircle className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-bold text-[#F59E0B]">Sign In to Place Order</p>
+              <p className="text-white/80 mt-0.5 leading-relaxed">{location.state.notice}</p>
+            </div>
+          </div>
+        )}
 
         {/* Error Notice Banner */}
         {errorMessage && (

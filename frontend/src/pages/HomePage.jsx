@@ -10,11 +10,13 @@ import {
   Plus,
   Sparkles,
   Flame,
+  User,
 } from 'lucide-react';
 import { CATEGORIES, MENU_ITEMS, HOMEPAGE_SIGNATURE_DISHES } from '../data/mockData';
 import { BiryaniBowl3D } from '../components/common/BiryaniBowl3D';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { getMenuCatalog } from '../services/api';
 
 const AnimateOnScrollDown = ({
@@ -86,6 +88,7 @@ const AnimateOnScrollDown = ({
 };
 
 export const HomePage = () => {
+  const { isAuthenticated } = useAuth();
   const { orders, addToCart, showToast, activeOrdersCount: contextActiveOrdersCount } = useCart();
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -316,20 +319,30 @@ export const HomePage = () => {
                   <span>Menu</span>
                 </Link>
 
-                {/* 3. Active Order Button */}
-                <Link
-                  to="/orders"
-                  className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-sm ${
-                    activeOrdersCount > 0
-                      ? 'bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 text-[#F59E0B] border border-[#F59E0B]/40 shadow-xs'
-                      : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 hover:border-white/30'
-                  }`}
-                >
-                  {activeOrdersCount > 0 && (
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  )}
-                  <span>Active Order {activeOrdersCount > 0 ? `(${activeOrdersCount})` : ''}</span>
-                </Link>
+                {/* 3. Active Order / Sign In Button */}
+                {isAuthenticated ? (
+                  <Link
+                    to="/orders"
+                    className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-sm ${
+                      activeOrdersCount > 0
+                        ? 'bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 text-[#F59E0B] border border-[#F59E0B]/40 shadow-xs'
+                        : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 hover:border-white/30'
+                    }`}
+                  >
+                    {activeOrdersCount > 0 && (
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    )}
+                    <span>Active Order {activeOrdersCount > 0 ? `(${activeOrdersCount})` : ''}</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/customer/login"
+                    className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 hover:border-[#F59E0B]/40 font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-sm"
+                  >
+                    <User className="w-3.5 h-3.5 text-[#F59E0B]" />
+                    <span>Sign In</span>
+                  </Link>
+                )}
               </motion.div>
             </AnimateOnScrollDown>
 

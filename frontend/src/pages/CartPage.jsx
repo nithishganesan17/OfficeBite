@@ -11,10 +11,12 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { resolveDishImage } from '../data/mockData';
 
 export const CartPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     cartItems,
     updateQuantity,
@@ -23,6 +25,19 @@ export const CartPage = () => {
     subtotal,
     totalItemCount,
   } = useCart();
+
+  const handleProceedToCheckout = () => {
+    if (!isAuthenticated) {
+      navigate('/customer/login', {
+        state: {
+          from: '/checkout',
+          notice: 'Please log in to your account to place your canteen order.',
+        },
+      });
+    } else {
+      navigate('/checkout');
+    }
+  };
 
   const [imgErrors, setImgErrors] = useState({});
 
@@ -246,7 +261,7 @@ export const CartPage = () => {
 
               {/* Proceed to Checkout button */}
               <button
-                onClick={() => navigate('/checkout')}
+                onClick={handleProceedToCheckout}
                 className="w-full py-3.5 px-5 rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] text-[#121212] font-black text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <span>Proceed to Checkout</span>
