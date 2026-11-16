@@ -44,34 +44,6 @@ export const StaffDashboardPage = () => {
     return Boolean(token) || Boolean(authIsAuthenticated);
   });
 
-  // Verify access has not been revoked by Administrator
-  useEffect(() => {
-    const rawRevoked = localStorage.getItem('officebite_revoked_emails');
-    let staffEmail = currentUser?.email;
-    if (!staffEmail) {
-      try {
-        const u = localStorage.getItem('officebite_staff_user');
-        if (u) staffEmail = JSON.parse(u)?.email;
-      } catch {}
-    }
-    if (rawRevoked && staffEmail) {
-      try {
-        const list = JSON.parse(rawRevoked);
-        if (Array.isArray(list) && list.includes(staffEmail.toLowerCase())) {
-          localStorage.removeItem('officebite_staff_token');
-          localStorage.removeItem('officebite_staff_user');
-          navigate('/staff/login', {
-            replace: true,
-            state: {
-              revoked: true,
-              message: `Access Revoked: Staff permissions for '${staffEmail}' have been removed by the Administrator.`,
-            },
-          });
-        }
-      } catch {}
-    }
-  }, [currentUser, navigate]);
-
   // Zero-latency instant hydration from storage so order details load in 0ms
   const [orders, setOrders] = useState(() => getInstantOrders());
   const [loading, setLoading] = useState(false);
@@ -352,9 +324,7 @@ export const StaffDashboardPage = () => {
         </div>
       )}
 
-      {isAuthenticated ? (
-        <>
-          {/* Four Metric Summary Cards */}
+      {/* Four Metric Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Card 1: New Orders */}
             <div className="bg-[#1A1A1A] rounded-3xl p-5 border border-white/10 shadow-xl relative overflow-hidden group hover:border-white/20 transition-colors">
@@ -729,10 +699,6 @@ export const StaffDashboardPage = () => {
               </div>
             </div>
           )}
-        </>
-      ) : (
-        <Navigate to="/staff/login" state={{ from: location.pathname }} replace />
-      )}
     </div>
   );
 };

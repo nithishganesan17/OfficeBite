@@ -76,19 +76,19 @@ export const CustomerLoginPage = () => {
         if (showToast) {
           showToast(`Welcome, Administrator ${user.name}!`, 'success');
         }
-        navigate('/admin', { replace: true });
+        window.location.href = '/admin';
       } else if (user.role === 'STAFF') {
         if (showToast) {
           showToast(`Authenticated as ${user.name} (Kitchen Staff)`, 'success');
         }
-        navigate('/staff', { replace: true });
+        window.location.href = '/staff';
       } else {
         if (showToast) {
           showToast(`Welcome back, ${user.name}!`, 'success');
         }
         const dest = location.state?.from;
         const isCustomerDest = dest && !dest.startsWith('/staff') && !dest.startsWith('/admin');
-        navigate(isCustomerDest ? dest : '/', { replace: true });
+        window.location.href = isCustomerDest ? dest : '/';
       }
     } catch (err) {
       console.error('Customer login error:', err);

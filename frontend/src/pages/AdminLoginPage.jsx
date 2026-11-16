@@ -67,19 +67,17 @@ export const AdminLoginPage = () => {
         if (showToast) {
           showToast(`Welcome, Administrator ${user.name}!`, 'success');
         }
-        const dest = location.state?.from;
-        const isAdminDest = dest && dest.startsWith('/admin');
-        navigate(isAdminDest ? dest : '/admin', { replace: true });
+        window.location.href = '/admin';
       } else if (user.role === 'STAFF') {
         if (showToast) {
           showToast(`Authenticated as ${user.name} (Kitchen Staff)`, 'success');
         }
-        navigate('/staff', { replace: true });
+        window.location.href = '/staff';
       } else {
         if (showToast) {
           showToast(`Welcome, ${user.name}! Redirected to Canteen.`, 'success');
         }
-        navigate('/', { replace: true });
+        window.location.href = '/';
       }
     } catch (err) {
       console.error('Administrator login error:', err);

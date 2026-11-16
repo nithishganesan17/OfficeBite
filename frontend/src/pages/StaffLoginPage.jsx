@@ -101,20 +101,18 @@ export const StaffLoginPage = () => {
         if (showToast) {
           showToast(`Welcome, Administrator ${user.name}!`, 'success');
         }
-        navigate('/admin', { replace: true });
+        window.location.href = '/admin';
       } else if (user.role === 'STAFF') {
         if (showToast) {
           showToast(`Authenticated as ${user.name} (Kitchen Staff)`, 'success');
         }
-        const dest = location.state?.from;
-        const isStaffDest = dest && dest.startsWith('/staff');
-        navigate(isStaffDest ? dest : '/staff', { replace: true });
+        window.location.href = '/staff';
       } else {
         // Customer credentials entered on Staff portal: seamlessly redirect them to customer portal
         if (showToast) {
           showToast(`Welcome, ${user.name}! Redirected to Canteen.`, 'success');
         }
-        navigate('/', { replace: true });
+        window.location.href = '/';
       }
     } catch (err) {
       console.error('Kitchen staff login error:', err);

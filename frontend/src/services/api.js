@@ -334,6 +334,17 @@ export const setStoredAuth = (token, user) => {
     localStorage.setItem('officebite_staff_token', token);
     localStorage.setItem('officebite_staff_user', JSON.stringify(user));
     localStorage.setItem('token', token);
+    // Un-revoke active staff user so valid login session is immediately accessible
+    try {
+      const raw = localStorage.getItem('officebite_revoked_emails');
+      if (raw && user.email) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const filtered = list.filter((e) => e.toLowerCase() !== user.email.toLowerCase());
+          localStorage.setItem('officebite_revoked_emails', JSON.stringify(filtered));
+        }
+      }
+    } catch {}
   } else {
     localStorage.setItem('officebite_token', token);
     localStorage.setItem('officebite_user', JSON.stringify(user));
